@@ -1,0 +1,31 @@
+<launch>
+    <node pkg="my_robot" type="encoder_driver" name="left_encoder_driver" >
+        <remap from="encoder" to="lwheel" />
+        <param name="pin" value="10"/>
+    </node>
+
+    <node pkg="my_robot" type="encoder_driver" name="right_encoder_driver" >
+        <remap from="encoder" to="rwheel" />
+        <param name="pin" value="4"/>
+    </node>
+
+    <node pkg="my_robot" type="motor_driver" name="left_motor_driver" >
+        <remap from="motor_cmd" to="lmotor_cmd" />
+        <param name="device" value="/dev/gpiopwm/18"/>
+    </node>
+
+    <node pkg="my_robot" type="motor_driver" name="right_motor_driver" >
+        <remap from="motor_cmd" to="rmotor_cmd" />
+        <param name="device" value="/dev/gpiopwm/13"/>
+    </node>
+
+    <node pkg="my_robot" type="imu_driver" name="imu_driver">
+        <rosparam>
+            AccelCorrectMat: [[ 0.99343087,  0.00769209,  0.0931366 ],
+                              [-0.00829568,  0.99535705, -0.00993391],
+                              [-0.09324117,  0.0057134 ,  0.96156334]]
+            AccelOffset:      [-0.05692667,  0.00276761,  0.13369852]
+            GyroOffset:       [  4.591268, -3.183211, 0.8912088]
+        </rosparam>
+    </node>
+</launch>
