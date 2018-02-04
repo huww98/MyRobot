@@ -12,7 +12,7 @@ class Imu
 
     void enable();
     void reset();
-    double setSampleRate(double hz);
+    double setSampleRate(double hz, uint8_t dlpfMode=0x01);
 
     Imu();
 

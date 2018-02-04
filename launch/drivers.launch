@@ -27,5 +27,7 @@
             AccelOffset:      [-0.05692667,  0.00276761,  0.13369852]
             GyroOffset:       [  4.591268, -3.183211, 0.8912088]
         </rosparam>
+        <param name="sampleRate" value="200.0"/>
+        <param name="dlpfMode" value="1"/>
     </node>
 </launch>

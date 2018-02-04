@@ -2,6 +2,7 @@
 #include <linux/i2c-dev.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <system_error>
 
@@ -32,15 +33,16 @@ void Imu::reset()
     i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x40+0x80);
 }
 
-double Imu::setSampleRate(double hz)
+double Imu::setSampleRate(double hz, uint8_t dlpfMode)
 {
-    uint8_t dlpf_cfg = 0x01;
+    uint8_t dlpf_cfg = dlpfMode & 0x07;
     i2c_smbus_write_byte_data(i2c_fd, REG_CONFIG, dlpf_cfg);
 
-    uint8_t smprt_div = 1000.0/hz - 1;
+    double baseRate = dlpf_cfg == 0x00 || dlpf_cfg == 0x07 ? 8000.0 : 1000.0;
+    uint8_t smprt_div = baseRate / hz - 1;
     i2c_smbus_write_byte_data(i2c_fd, REG_SMPRT_DIV, smprt_div);
 
-    return 1000.0/(smprt_div+1);
+    return baseRate / (smprt_div + 1);
 }
 
 double Imu::readScaledInt16(uint8_t reg, double scale)

@@ -56,10 +56,11 @@ void getParams()
     }
 }
 
-void setSampleRate(double hz)
+void setSampleRate(double hz, uint8_t dlpfMode)
 {
-    double actureRate = IMU.setSampleRate(hz);
+    double actureRate = IMU.setSampleRate(hz, dlpfMode);
     ROS_INFO("setting sampling rate to %f Hz", actureRate);
+    ROS_INFO("setting digital low-pass filter to mode %d", dlpfMode);
 }
 
 void dataReady()
@@ -94,10 +95,12 @@ int main(int argc, char **argv)
     getParams();
 
     double sampleRate;
-    ros::param::param("~sampleRate", sampleRate, 200.0);
+    ros::param::param<double>("~sampleRate", sampleRate, 200.0);
+    int dlpfMode;
+    ros::param::param<int>("~dlpfMode", dlpfMode, 0x01);
 
-    resetIMU(); 
-    setSampleRate(sampleRate);
+    resetIMU();
+    setSampleRate(sampleRate, (uint8_t)dlpfMode);
     IMU.enableDataReadyInterrupt(dataReady);
     enableIMU();
 
