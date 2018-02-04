@@ -11,6 +11,7 @@ Imu IMU;
 
 Matrix3d AccelCorrectMat = Matrix3d::Identity();
 Vector3d AccelOffset = Vector3d::Zero();
+Matrix3d GyroCorrectMat = Matrix3d::Identity();
 Vector3d GyroOffset = Vector3d::Zero();
 
 template <typename Derived>
@@ -42,6 +43,12 @@ void getParams()
         loadVec(ao, AccelOffset);
     }
 
+    XmlRpc::XmlRpcValue gm;
+    if(ros::param::get("~GyroCorrectMat", gm))
+    {
+        loadMat(gm, GyroCorrectMat);
+    }
+
     XmlRpc::XmlRpcValue go;
     if(ros::param::get("~GyroOffset", go))
     {
@@ -60,7 +67,7 @@ void dataReady()
     Vector3d rawAccel(IMU.readAccelX(),IMU.readAccelY(),IMU.readAccelZ());
     Vector3d rawGyro(IMU.readGyroX(),IMU.readGyroY(),IMU.readGyroZ());
     Vector3d accel = AccelCorrectMat * (rawAccel + AccelOffset);
-    Vector3d gyro = rawGyro + GyroOffset;
+    Vector3d gyro = GyroCorrectMat * (rawGyro + GyroOffset);
     ROS_DEBUG("New IMU data. Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%12.6f, %12.6f, %12.6f]",
         accel(0), accel(1), accel(2),
         gyro(0), gyro(1), gyro(2));
