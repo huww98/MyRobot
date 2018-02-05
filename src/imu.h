@@ -2,6 +2,18 @@
 #include <limits>
 #include <cstdint>
 
+struct ImuData{
+  double AccelX;
+  double AccelY;
+  double AccelZ;
+
+  double Temp;
+
+  double GyroX;
+  double GyroY;
+  double GyroZ;
+};
+
 class Imu
 {
   public:
@@ -23,6 +35,8 @@ class Imu
     inline double readGyroX() { return readGyroValue(REG_GYRO_XOUT_H); }
     inline double readGyroY() { return readGyroValue(REG_GYRO_YOUT_H); }
     inline double readGyroZ() { return readGyroValue(REG_GYRO_ZOUT_H); }
+
+    ImuData readAll();
 
     void enableDataReadyInterrupt(void (*dataReady)(void));
     
@@ -47,4 +61,5 @@ class Imu
 
     inline double readAccelValue(uint8_t reg) { return readScaledInt16(reg, ACCEL_SCALE); }
     inline double readGyroValue(uint8_t reg) { return readScaledInt16(reg, GYRO_SCALE); }
+    double processRawData(uint8_t h, uint8_t l, double scale);
 };

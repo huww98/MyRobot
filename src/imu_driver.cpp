@@ -58,15 +58,16 @@ void getParams()
 
 void setSampleRate(double hz, uint8_t dlpfMode)
 {
-    double actureRate = IMU.setSampleRate(hz, dlpfMode);
-    ROS_INFO("setting sampling rate to %f Hz", actureRate);
+    double actualRate = IMU.setSampleRate(hz, dlpfMode);
+    ROS_INFO("setting sampling rate to %f Hz", actualRate);
     ROS_INFO("setting digital low-pass filter to mode %d", dlpfMode);
 }
 
 void dataReady()
 {
-    Vector3d rawAccel(IMU.readAccelX(),IMU.readAccelY(),IMU.readAccelZ());
-    Vector3d rawGyro(IMU.readGyroX(),IMU.readGyroY(),IMU.readGyroZ());
+    auto data = IMU.readAll();
+    Vector3d rawAccel = Vector3d(data.AccelX, data.AccelY, data.AccelZ);
+    Vector3d rawGyro = Vector3d(data.GyroX, data.GyroY, data.GyroZ);
     Vector3d accel = AccelCorrectMat * (rawAccel + AccelOffset);
     Vector3d gyro = GyroCorrectMat * (rawGyro + GyroOffset);
     ROS_DEBUG("New IMU data. Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%12.6f, %12.6f, %12.6f]",

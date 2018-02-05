@@ -10,6 +10,23 @@ using namespace std;
 
 const char* const Imu::I2C_DEV="/dev/i2c-1";
 
+inline int i2c_smbus_read_block_data(int file, uint8_t command,
+                                     uint8_t size ,uint8_t *values)
+{
+    union i2c_smbus_data data;
+    data.block[0] = size;
+    int result;
+    if (result = i2c_smbus_access(file, I2C_SMBUS_READ, command,
+                         I2C_SMBUS_I2C_BLOCK_DATA, &data))
+        return result;
+    else
+    {
+        for (int i = 1; i <= size; i++)
+            values[i - 1] = data.block[i];
+        return result;
+    }
+}
+
 Imu::Imu()
 {
     wiringPiSetupSys();
@@ -50,6 +67,47 @@ double Imu::readScaledInt16(uint8_t reg, double scale)
     int rawData = i2c_smbus_read_word_data(i2c_fd, reg);
     int16_t data = rawData >> 8 | rawData << 8;
     return data * scale;
+}
+
+struct ImuRawData {
+    uint8_t ACCEL_XOUT_H;
+    uint8_t ACCEL_XOUT_L;
+    uint8_t ACCEL_YOUT_H;
+    uint8_t ACCEL_YOUT_L;
+    uint8_t ACCEL_ZOUT_H;
+    uint8_t ACCEL_ZOUT_L;
+
+    uint8_t TEMP_OUT_H;
+    uint8_t TEMP_OUT_L;
+
+    uint8_t GYRO_XOUT_H;
+    uint8_t GYRO_XOUT_L;
+    uint8_t GYRO_YOUT_H;
+    uint8_t GYRO_YOUT_L;
+    uint8_t GYRO_ZOUT_H;
+    uint8_t GYRO_ZOUT_L;
+};
+static_assert(sizeof(ImuRawData) == 14, "Imu raw data should be 14 byte long");
+
+double Imu::processRawData(uint8_t h, uint8_t l, double scale)
+{
+    int16_t data = h << 8 | l;
+    return data * scale;
+}
+
+ImuData Imu::readAll()
+{
+    ImuRawData rawData;
+    i2c_smbus_read_block_data(i2c_fd, REG_ACCEL_XOUT_H, sizeof(rawData), (uint8_t *)&rawData);
+    ImuData data;
+    data.AccelX = processRawData(rawData.ACCEL_XOUT_H, rawData.ACCEL_XOUT_L, ACCEL_SCALE);
+    data.AccelY = processRawData(rawData.ACCEL_YOUT_H, rawData.ACCEL_YOUT_L, ACCEL_SCALE);
+    data.AccelZ = processRawData(rawData.ACCEL_ZOUT_H, rawData.ACCEL_ZOUT_L, ACCEL_SCALE);
+    data.Temp = processRawData(rawData.TEMP_OUT_H, rawData.TEMP_OUT_L, 1);
+    data.GyroX = processRawData(rawData.GYRO_XOUT_H, rawData.GYRO_XOUT_L, GYRO_SCALE);
+    data.GyroY = processRawData(rawData.GYRO_YOUT_H, rawData.GYRO_YOUT_L, GYRO_SCALE);
+    data.GyroZ = processRawData(rawData.GYRO_ZOUT_H, rawData.GYRO_ZOUT_L, GYRO_SCALE);
+    return data;
 }
 
 void Imu::enableDataReadyInterrupt(void (*dataReady)(void))
