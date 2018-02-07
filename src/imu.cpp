@@ -42,12 +42,12 @@ Imu::Imu()
 
 void Imu::enable()
 {
-    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x00);
+    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x01); //Using Clock Source: PLL with X axis gyroscope reference
 }
 
 void Imu::reset()
 {
-    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x40+0x80);
+    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x40+0x80); //Sleep and Device_Reset
 }
 
 double Imu::setSampleRate(double hz, uint8_t dlpfMode)

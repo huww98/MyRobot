@@ -2,9 +2,12 @@
 #include <limits>
 #include <iostream>
 #include <Eigen/Dense>
+#include <thread>
+#include <chrono>
 #include "imu.h"
 
 using namespace std;
+using namespace std::chrono_literals;
 using namespace Eigen;
 
 Imu IMU;
@@ -101,9 +104,12 @@ int main(int argc, char **argv)
     ros::param::param<int>("~dlpfMode", dlpfMode, 0x01);
 
     resetIMU();
-    setSampleRate(sampleRate, (uint8_t)dlpfMode);
-    IMU.enableDataReadyInterrupt(dataReady);
+    this_thread::sleep_for(100ms);
     enableIMU();
+    this_thread::sleep_for(100ms);
+    setSampleRate(sampleRate, (uint8_t)dlpfMode);
+    this_thread::sleep_for(100ms);
+    IMU.enableDataReadyInterrupt(dataReady);
 
     ros::spin();
 
