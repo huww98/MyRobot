@@ -1,10 +1,11 @@
-#include "imu.h"
 #include <linux/i2c-dev.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <system_error>
+#include "imu.h"
+#include "gpio.h"
 
 using namespace std;
 
@@ -27,10 +28,8 @@ inline int i2c_smbus_read_block_data(int file, uint8_t command,
     }
 }
 
-Imu::Imu()
+Imu::Imu(int interruptPin) : intPin(interruptPin, Direction::IN)
 {
-    wiringPiSetupSys();
-
     i2c_fd = open(I2C_DEV, O_RDWR);
     if (i2c_fd < 0) {
         throw runtime_error("failed to open i2c device");
@@ -110,10 +109,10 @@ ImuData Imu::readAll()
     return data;
 }
 
-void Imu::enableDataReadyInterrupt(void (*dataReady)(void))
+void Imu::enableDataReadyInterrupt(function<void()> dataReady)
 {
     uint8_t int_enable = 0x01;
     i2c_smbus_write_byte_data(i2c_fd, REG_INT_ENABLE, int_enable);
 
-    wiringPiISR(INTERRUPT_PIN, INT_EDGE_RISING, dataReady);
+    intPin.EnableISR(Edge::RISING, [dataReady](const DigitalValue &) { dataReady(); });
 }

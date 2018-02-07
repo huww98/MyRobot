@@ -11,7 +11,7 @@ using namespace Eigen;
 Vector3d gyroSum = Vector3d::Zero();
 int readCount = 0;
 const int maxReadCount = 8192;
-Imu imu;
+Imu imu(14);
 
 void dataReady()
 {

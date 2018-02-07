@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(my_robot)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+set(CMAKE_CXX_STANDARD 14)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,13 +14,13 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   message_generation
+  roslaunch
 )
-
-find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Eigen3 REQUIRED)
+find_package(Threads REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -69,6 +70,8 @@ add_message_files(
 #   Action1.action
 #   Action2.action
 # )
+
+roslaunch_add_file_check(launch)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -126,7 +129,7 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}_libimu STATIC
-  src/imu.cpp
+  src/imu.cpp src/gpio.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -139,9 +142,8 @@ add_library(${PROJECT_NAME}_libimu STATIC
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_motor_driver src/motor_driver.cpp)
 add_executable(${PROJECT_NAME}_encoder_driver src/encoder_driver.cpp)
-add_executable(${PROJECT_NAME}_imu_driver src/imu_driver.cpp)
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
-add_executable(${PROJECT_NAME}_controller src/controller.cpp)
+add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,7 +151,6 @@ add_executable(${PROJECT_NAME}_controller src/controller.cpp)
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_motor_driver PROPERTIES OUTPUT_NAME motor_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_encoder_driver PROPERTIES OUTPUT_NAME encoder_driver PREFIX "")
-set_target_properties(${PROJECT_NAME}_imu_driver PROPERTIES OUTPUT_NAME imu_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controller PREFIX "")
 
@@ -165,18 +166,15 @@ target_link_libraries(${PROJECT_NAME}_encoder_driver
   ${catkin_LIBRARIES}
   wiringPi
 )
-target_link_libraries(${PROJECT_NAME}_imu_driver
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}_libimu
-)
 target_link_libraries(${PROJECT_NAME}_gyro_offset
   ${PROJECT_NAME}_libimu
 )
 target_link_libraries(${PROJECT_NAME}_controller
   ${catkin_LIBRARIES}
+  ${PROJECT_NAME}_libimu
 )
 target_link_libraries(${PROJECT_NAME}_libimu
-  wiringPi pthread rt crypt
+  Threads::Threads
 )
 
 #############

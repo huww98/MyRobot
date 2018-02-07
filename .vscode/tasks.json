@@ -12,6 +12,12 @@
                 "isDefault": true
             },
             "problemMatcher": "$gcc"
+        },
+        {
+            "label": "sync headers",
+            "type": "shell",
+            "command": "bash -c ./syncHeaders.sh",
+            "problemMatcher": []
         }
     ]
 }

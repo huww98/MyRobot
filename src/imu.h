@@ -1,6 +1,10 @@
-#include <wiringPi.h>
+#ifndef IMU_H
+#define IMU_H
+
 #include <limits>
 #include <cstdint>
+#include <functional>
+#include "gpio.h"
 
 struct ImuData{
   double AccelX;
@@ -20,13 +24,11 @@ class Imu
     static const char *const I2C_DEV;
     static const int IMU_DEVID = 0x68;
 
-    static const int INTERRUPT_PIN = 14;
-
     void enable();
     void reset();
     double setSampleRate(double hz, uint8_t dlpfMode=0x01);
 
-    Imu();
+    Imu(int interruptPin);
 
     inline double readAccelX() { return readAccelValue(REG_ACCEL_XOUT_H); }
     inline double readAccelY() { return readAccelValue(REG_ACCEL_YOUT_H); }
@@ -38,8 +40,8 @@ class Imu
 
     ImuData readAll();
 
-    void enableDataReadyInterrupt(void (*dataReady)(void));
-    
+    void enableDataReadyInterrupt(std::function<void()> dataReady);
+
   private:
     constexpr static const double ACCEL_SCALE = 2.0 / std::numeric_limits<int16_t>::max();
     constexpr static const double GYRO_SCALE = 250.0 / std::numeric_limits<int16_t>::max();
@@ -59,9 +61,11 @@ class Imu
         REG_PWR_MGMT_1 = 0x6B;
 
     int i2c_fd;
+    DigitalGpio intPin;
     double readScaledInt16(uint8_t reg, double scale);
-
     inline double readAccelValue(uint8_t reg) { return readScaledInt16(reg, ACCEL_SCALE); }
     inline double readGyroValue(uint8_t reg) { return readScaledInt16(reg, GYRO_SCALE); }
     double processRawData(uint8_t h, uint8_t l, double scale, double offset = 0);
 };
+
+#endif

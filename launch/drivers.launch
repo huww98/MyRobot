@@ -19,7 +19,9 @@
         <param name="device" value="/dev/gpiopwm/13"/>
     </node>
 
-    <node pkg="my_robot" type="imu_driver" name="imu_driver">
+    <param name="g" value="9.792" />
+    <node pkg="my_robot" type="controller" name="controller">
+        <param name="imuInterruptPin" value="14"/>
         <rosparam>
             AccelCorrectMat: [[ 0.99343087,  0.00769209,  0.0931366 ],
                               [-0.00829568,  0.99535705, -0.00993391],
@@ -27,7 +29,7 @@
             AccelOffset:      [-0.05692667,  0.00276761,  0.13369852]
             GyroOffset:       [  4.591268, -3.183211, 0.8912088]
         </rosparam>
-        <param name="sampleRate" value="1000.0"/>
-        <param name="dlpfMode" value="0"/>
+        <param name="imuSampleRate" value="500.0"/>
+        <param name="imuDlpfMode" value="0"/>
     </node>
 </launch>
