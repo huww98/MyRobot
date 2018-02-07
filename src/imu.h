@@ -43,6 +43,8 @@ class Imu
   private:
     constexpr static const double ACCEL_SCALE = 2.0 / std::numeric_limits<int16_t>::max();
     constexpr static const double GYRO_SCALE = 250.0 / std::numeric_limits<int16_t>::max();
+    constexpr static const double TEMP_SCALE = 1.0 / 340.0;
+    constexpr static const double TEMP_OFFSET = 36.53;
 
     static const uint8_t
         REG_SMPRT_DIV = 0x19,
@@ -61,5 +63,5 @@ class Imu
 
     inline double readAccelValue(uint8_t reg) { return readScaledInt16(reg, ACCEL_SCALE); }
     inline double readGyroValue(uint8_t reg) { return readScaledInt16(reg, GYRO_SCALE); }
-    double processRawData(uint8_t h, uint8_t l, double scale);
+    double processRawData(uint8_t h, uint8_t l, double scale, double offset = 0);
 };

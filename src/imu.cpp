@@ -89,10 +89,10 @@ struct ImuRawData {
 };
 static_assert(sizeof(ImuRawData) == 14, "Imu raw data should be 14 byte long");
 
-double Imu::processRawData(uint8_t h, uint8_t l, double scale)
+double Imu::processRawData(uint8_t h, uint8_t l, double scale, double offset)
 {
     int16_t data = h << 8 | l;
-    return data * scale;
+    return data * scale + offset;
 }
 
 ImuData Imu::readAll()
@@ -103,7 +103,7 @@ ImuData Imu::readAll()
     data.AccelX = processRawData(rawData.ACCEL_XOUT_H, rawData.ACCEL_XOUT_L, ACCEL_SCALE);
     data.AccelY = processRawData(rawData.ACCEL_YOUT_H, rawData.ACCEL_YOUT_L, ACCEL_SCALE);
     data.AccelZ = processRawData(rawData.ACCEL_ZOUT_H, rawData.ACCEL_ZOUT_L, ACCEL_SCALE);
-    data.Temp = processRawData(rawData.TEMP_OUT_H, rawData.TEMP_OUT_L, 1);
+    data.Temp = processRawData(rawData.TEMP_OUT_H, rawData.TEMP_OUT_L, TEMP_SCALE, TEMP_OFFSET);
     data.GyroX = processRawData(rawData.GYRO_XOUT_H, rawData.GYRO_XOUT_L, GYRO_SCALE);
     data.GyroY = processRawData(rawData.GYRO_YOUT_H, rawData.GYRO_YOUT_L, GYRO_SCALE);
     data.GyroZ = processRawData(rawData.GYRO_ZOUT_H, rawData.GYRO_ZOUT_L, GYRO_SCALE);
