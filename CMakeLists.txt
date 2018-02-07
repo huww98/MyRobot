@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   differential_drive
   roscpp
   std_msgs
+  sensor_msgs
+  message_generation
 )
 
 find_package(Eigen3 REQUIRED)
@@ -49,11 +51,10 @@ find_package(Eigen3 REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  WheelVelocityStamped.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -70,10 +71,10 @@ find_package(Eigen3 REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -140,6 +141,7 @@ add_executable(${PROJECT_NAME}_motor_driver src/motor_driver.cpp)
 add_executable(${PROJECT_NAME}_encoder_driver src/encoder_driver.cpp)
 add_executable(${PROJECT_NAME}_imu_driver src/imu_driver.cpp)
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
+add_executable(${PROJECT_NAME}_controller src/controller.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,10 +151,11 @@ set_target_properties(${PROJECT_NAME}_motor_driver PROPERTIES OUTPUT_NAME motor_
 set_target_properties(${PROJECT_NAME}_encoder_driver PROPERTIES OUTPUT_NAME encoder_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_imu_driver PROPERTIES OUTPUT_NAME imu_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
+set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controller PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_motor_driver
@@ -168,6 +171,9 @@ target_link_libraries(${PROJECT_NAME}_imu_driver
 )
 target_link_libraries(${PROJECT_NAME}_gyro_offset
   ${PROJECT_NAME}_libimu
+)
+target_link_libraries(${PROJECT_NAME}_controller
+  ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_libimu
   wiringPi pthread rt crypt

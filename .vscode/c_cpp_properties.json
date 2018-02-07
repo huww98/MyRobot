@@ -71,6 +71,7 @@
                 "D:/third-party_lib/boost_1_66_0",
                 "D:/third-party_lib/eigen-eigen-5a0156e40feb",
                 "C:/Source/linux_includes/ros/include",
+                "C:/Source/linux_includes/ros/devel/include",
                 "${workspaceRoot}"
             ],
             "defines": [
