@@ -29,6 +29,7 @@ class Imu
     double setSampleRate(double hz, uint8_t dlpfMode=0x01);
 
     Imu(int interruptPin);
+    ~Imu();
 
     inline double readAccelX() { return readAccelValue(REG_ACCEL_XOUT_H); }
     inline double readAccelY() { return readAccelValue(REG_ACCEL_YOUT_H); }

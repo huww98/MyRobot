@@ -66,7 +66,6 @@ void RosImu::setSampleRate(double hz, uint8_t dlpfMode)
     ROS_INFO_NAMED(imuLogName, "setting digital low-pass filter to mode %d", dlpfMode);
 }
 
-double g = 9.8;
 constexpr double PI = 3.14159265358979323846;
 constexpr double degreeToRad = PI / 180.0;
 
@@ -103,13 +102,13 @@ int getInterruptPin(const ros::NodeHandle& nh)
     if(nh.getParam("interruptPin", pin))
         return pin;
 
-    ROS_FATAL_NAMED(imuLogName, "interruptPin must be set.");
-    exit(EXIT_FAILURE);
+    ROS_FATAL_NAMED(imuLogName, "interruptPin parameter must be set.");
+    ROS_BREAK();
 }
 
-RosImu::RosImu(std::function<void(const RosImu::Data &)> dataReady, ros::NodeHandle nh) : Imu(getInterruptPin(nh))
+RosImu::RosImu(std::function<void(const RosImu::Data &)> dataReady, ros::NodeHandle nh) :
+    Imu(getInterruptPin(nh)), dataReady(dataReady)
 {
-    this->dataReady = dataReady;
     ROS_DEBUG_NAMED(imuLogName, "Eigen %d.%d.%d", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
     getParams(nh);
 

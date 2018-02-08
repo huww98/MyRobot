@@ -26,4 +26,6 @@ class RosImu: public Imu
     static Eigen::Vector3d AccelOffset;
     static Eigen::Matrix3d GyroCorrectMat;
     static Eigen::Vector3d GyroOffset;
+
+    double g = 9.8;
 };

@@ -39,6 +39,11 @@ Imu::Imu(int interruptPin) : intPin(interruptPin, Direction::IN)
     }
 }
 
+Imu::~Imu()
+{
+    reset();
+}
+
 void Imu::enable()
 {
     i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x01); //Using Clock Source: PLL with X axis gyroscope reference

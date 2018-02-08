@@ -1,14 +1,4 @@
 <launch>
-    <node pkg="my_robot" type="encoder_driver" name="left_encoder_driver" >
-        <remap from="encoder" to="lwheel" />
-        <param name="pin" value="10"/>
-    </node>
-
-    <node pkg="my_robot" type="encoder_driver" name="right_encoder_driver" >
-        <remap from="encoder" to="rwheel" />
-        <param name="pin" value="4"/>
-    </node>
-
     <node pkg="my_robot" type="motor_driver" name="left_motor_driver" >
         <remap from="motor_cmd" to="lmotor_cmd" />
         <param name="device" value="/dev/gpiopwm/18"/>
@@ -21,6 +11,8 @@
 
     <param name="g" value="9.792" />
     <node pkg="my_robot" type="controller" name="controller">
+        <param name="leftEncoder/pin" value="10"/>
+        <param name="rightEncoder/pin" value="4"/>
         <rosparam ns="imu">
             interruptPin: 14
             sampleRate: 500.0

@@ -12,9 +12,6 @@ add_definitions("-fdiagnostics-color")
 find_package(catkin REQUIRED COMPONENTS
   differential_drive
   roscpp
-  std_msgs
-  sensor_msgs
-  message_generation
   roslaunch
 )
 
@@ -53,10 +50,10 @@ find_package(Threads REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  WheelVelocityStamped.msg
-)
+# add_message_files(
+#   FILES
+#   WheelVelocityStamped.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -75,10 +72,10 @@ add_message_files(
 roslaunch_add_file_check(launch)
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -145,30 +142,24 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_motor_driver src/motor_driver.cpp)
-add_executable(${PROJECT_NAME}_encoder_driver src/encoder_driver.cpp)
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
-add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp)
+add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_encoder.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_motor_driver PROPERTIES OUTPUT_NAME motor_driver PREFIX "")
-set_target_properties(${PROJECT_NAME}_encoder_driver PROPERTIES OUTPUT_NAME encoder_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controller PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_motor_driver
   ${catkin_LIBRARIES}
-)
-target_link_libraries(${PROJECT_NAME}_encoder_driver
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}_libgpio
 )
 target_link_libraries(${PROJECT_NAME}_gyro_offset
   ${PROJECT_NAME}_libimu
@@ -176,6 +167,7 @@ target_link_libraries(${PROJECT_NAME}_gyro_offset
 target_link_libraries(${PROJECT_NAME}_controller
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libimu
+  ${PROJECT_NAME}_libgpio
 )
 target_link_libraries(${PROJECT_NAME}_libgpio
   Threads::Threads

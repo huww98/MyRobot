@@ -14,6 +14,4 @@ ssh $piHostName 'source /opt/ros/kinetic/setup.bash && export CLICOLOR_FORCE=1 &
     exit 1
 }
 
-echo syncing headers back
-rsync -rt --delete $piHostName:~/catkin_ws/devel/include/my_robot/ /mnt/c/Source/linux_includes/ros/devel/include/my_robot/
 echo -e "${GREEN}build Success${NC}"

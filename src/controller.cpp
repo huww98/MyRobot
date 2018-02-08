@@ -1,8 +1,8 @@
 #include <ros/ros.h>
-#include <my_robot/WheelVelocityStamped.h>
 #include <chrono>
 
 #include "ros_imu.h"
+#include "ros_encoder.h"
 #include "spsc_bounded_queue.h"
 
 struct WheelVelocity
@@ -15,17 +15,17 @@ SpscBoundedQueue<RosImu::Data> imuQueue(16);
 SpscBoundedQueue<WheelVelocity> leftWheelQueue(8);
 SpscBoundedQueue<WheelVelocity> rightWheelQueue(8);
 
-void leftVelocityUpdated(const my_robot::WheelVelocityStamped::ConstPtr &msg)
+void leftVelocityUpdated(int tick)
 {
     leftWheelQueue.enqueue(WheelVelocity());
 }
 
-void rightVelocityUpdated(const my_robot::WheelVelocityStamped::ConstPtr &msg)
+void rightVelocityUpdated(int tick)
 {
     rightWheelQueue.enqueue(WheelVelocity());
 }
 
-void ImuUpdated(const RosImu::Data& data)
+void imuUpdated(const RosImu::Data& data)
 {
     imuQueue.enqueue(data);
 }
@@ -34,12 +34,16 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "controller");
     ros::NodeHandle n;
-    // auto leftVSub = n.subscribe("left_velocity", 5, leftVelocityUpdated);
-    // auto RightVSub = n.subscribe("right_velocity", 5, rightVelocityUpdated);
-    ros::NodeHandle imuNode("~imu");
-    RosImu imu(ImuUpdated, imuNode);
 
-    ros::spin();
+    ros::NodeHandle imuNode("~imu");
+    RosImu imu(imuUpdated, imuNode);
+
+    ros::NodeHandle leftEncoderNode("~leftEncoder");
+    RosEncoder leftEncoder(leftVelocityUpdated, leftEncoderNode, "leftEncoder");
+    ros::NodeHandle rightEncoderNode("~rightEncoder");
+    RosEncoder rightEncoder(rightVelocityUpdated, rightEncoderNode, "rightEncoder");
+
+    ros::waitForShutdown();
 
     imu.close();
 }
