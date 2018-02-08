@@ -40,6 +40,11 @@
         "typeinfo": "cpp",
         "utility": "cpp",
         "dense": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "streambuf": "cpp"
     }
 }
