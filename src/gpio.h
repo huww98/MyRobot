@@ -7,6 +7,8 @@
 struct DigitalValue
 {
     const char *const buf;
+    bool IsHigh() const { return this == &HIGH; }
+    bool IsLow() const { return this == &LOW; }
 
     static const DigitalValue HIGH;
     static const DigitalValue LOW;
@@ -37,6 +39,8 @@ class DigitalGpio
     const DigitalValue &Read();
     void EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr);
     ~DigitalGpio();
+
+    DigitalGpio &operator=(DigitalGpio &&other) = default;
 
   private:
     int pin;

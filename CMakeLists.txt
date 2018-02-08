@@ -130,7 +130,10 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}_libimu STATIC
-  src/imu.cpp src/gpio.cpp
+  src/imu.cpp
+)
+add_library(${PROJECT_NAME}_libgpio STATIC
+  src/gpio.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -165,7 +168,7 @@ target_link_libraries(${PROJECT_NAME}_motor_driver
 )
 target_link_libraries(${PROJECT_NAME}_encoder_driver
   ${catkin_LIBRARIES}
-  wiringPi
+  ${PROJECT_NAME}_libgpio
 )
 target_link_libraries(${PROJECT_NAME}_gyro_offset
   ${PROJECT_NAME}_libimu
@@ -174,8 +177,11 @@ target_link_libraries(${PROJECT_NAME}_controller
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libimu
 )
-target_link_libraries(${PROJECT_NAME}_libimu
+target_link_libraries(${PROJECT_NAME}_libgpio
   Threads::Threads
+)
+target_link_libraries(${PROJECT_NAME}_libimu
+  ${PROJECT_NAME}_libgpio
 )
 
 #############
