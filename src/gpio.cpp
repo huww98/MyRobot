@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <sys/epoll.h>
 #include <sched.h>
+#include <errno.h>
+#include <string.h>
 
 #include <sstream>
 #include <fstream>
@@ -22,9 +24,16 @@ const Edge Edge::RISING{"rising"};
 const Edge Edge::FALLING{"falling"};
 const Edge Edge::BOTH{"both"};
 
+void waitForFile(string path)
+{
+    while (access(path.c_str(), R_OK|W_OK) == -1)
+        ;
+}
+
 template <typename T>
 void writeDataToInterface(T data, string interfacePath)
 {
+    waitForFile(interfacePath);
     ofstream interface(interfacePath);
     interface << data << endl;
     interface.close();
@@ -43,7 +52,15 @@ DigitalGpio::DigitalGpio(int pin, const Direction &direction)
 
     stringstream valuess;
     valuess << "/sys/class/gpio/gpio" << pin << "/value";
+    waitForFile(valuess.str());
     valueFd = open(valuess.str().c_str(), O_RDWR);
+
+    if(valueFd == -1)
+    {
+        stringstream ss;
+        ss << "open value file failed. " << strerror(errno);
+        throw runtime_error(ss.str());
+    }
 }
 
 void DigitalGpio::Write(const DigitalValue &value)

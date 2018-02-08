@@ -1,3 +1,4 @@
+#include <ros/ros.h>
 #include <functional>
 #include <Eigen/Dense>
 #include "imu.h"
@@ -10,13 +11,13 @@ class RosImu: public Imu
         Eigen::Vector3d accel;
         Eigen::Vector3d gyro;
     };
-    RosImu(std::function<void(const Data &)> dataReady);
+    RosImu(std::function<void(const Data &)> dataReady, ros::NodeHandle nh);
     void close();
 
   private:
     std::function<void(const Data &)> dataReady;
     void dataReadyHandler();
-    void getParams();
+    void getParams(const ros::NodeHandle&);
     void setSampleRate(double hz, uint8_t dlpfMode);
     void enableIMU();
     void resetIMU();

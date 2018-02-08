@@ -36,7 +36,8 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     // auto leftVSub = n.subscribe("left_velocity", 5, leftVelocityUpdated);
     // auto RightVSub = n.subscribe("right_velocity", 5, rightVelocityUpdated);
-    RosImu imu(ImuUpdated);
+    ros::NodeHandle imuNode("~imu");
+    RosImu imu(ImuUpdated, imuNode);
 
     ros::spin();
 

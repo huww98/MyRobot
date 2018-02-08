@@ -1,4 +1,3 @@
-#include <ros/ros.h>
 #include <limits>
 #include <iostream>
 #include <Eigen/Dense>
@@ -16,6 +15,8 @@ Vector3d RosImu::AccelOffset = Vector3d::Zero();
 Matrix3d RosImu::GyroCorrectMat = Matrix3d::Identity();
 Vector3d RosImu::GyroOffset = Vector3d::Zero();
 
+constexpr auto imuLogName = "imu";
+
 template <typename Derived>
 void loadMat(XmlRpc::XmlRpcValue &param, MatrixBase<Derived> &mat)
 {
@@ -31,28 +32,28 @@ void loadVec(XmlRpc::XmlRpcValue &param, MatrixBase<Derived> &vec)
         vec(i) = param[i];
 }
 
-void RosImu::getParams()
+void RosImu::getParams(const ros::NodeHandle& nh)
 {
     XmlRpc::XmlRpcValue am;
-    if (ros::param::get("~AccelCorrectMat", am))
+    if (nh.getParam("accelCorrectMat", am))
     {
         loadMat(am, AccelCorrectMat);
     }
 
     XmlRpc::XmlRpcValue ao;
-    if (ros::param::get("~AccelOffset", ao))
+    if (nh.getParam("accelOffset", ao))
     {
         loadVec(ao, AccelOffset);
     }
 
     XmlRpc::XmlRpcValue gm;
-    if (ros::param::get("~GyroCorrectMat", gm))
+    if (nh.getParam("gyroCorrectMat", gm))
     {
         loadMat(gm, GyroCorrectMat);
     }
 
     XmlRpc::XmlRpcValue go;
-    if (ros::param::get("~GyroOffset", go))
+    if (nh.getParam("gyroOffset", go))
     {
         loadVec(go, GyroOffset);
     }
@@ -61,11 +62,11 @@ void RosImu::getParams()
 void RosImu::setSampleRate(double hz, uint8_t dlpfMode)
 {
     double actualRate = Imu::setSampleRate(hz, dlpfMode);
-    ROS_INFO("setting sampling rate to %f Hz", actualRate);
-    ROS_INFO("setting digital low-pass filter to mode %d", dlpfMode);
+    ROS_INFO_NAMED(imuLogName, "setting sampling rate to %f Hz", actualRate);
+    ROS_INFO_NAMED(imuLogName, "setting digital low-pass filter to mode %d", dlpfMode);
 }
 
-double g;
+double g = 9.8;
 constexpr double PI = 3.14159265358979323846;
 constexpr double degreeToRad = PI / 180.0;
 
@@ -77,9 +78,9 @@ void RosImu::dataReadyHandler()
     RosImu::Data correctedData;
     correctedData.accel = AccelCorrectMat * (rawAccel + AccelOffset) * g;
     correctedData.gyro = GyroCorrectMat * (rawGyro + GyroOffset) * degreeToRad;
-    ROS_DEBUG("New IMU data. Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%12.6f, %12.6f, %12.6f]",
-              correctedData.accel(0), correctedData.accel(1), correctedData.accel(2),
-              correctedData.gyro(0), correctedData.gyro(1), correctedData.gyro(2));
+    ROS_DEBUG_NAMED(imuLogName, "New IMU data. Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%10.6f, %10.6f, %10.6f]",
+                    correctedData.accel(0), correctedData.accel(1), correctedData.accel(2),
+                    correctedData.gyro(0), correctedData.gyro(1), correctedData.gyro(2));
 
     this->dataReady(correctedData);
 }
@@ -87,36 +88,39 @@ void RosImu::dataReadyHandler()
 void RosImu::enableIMU()
 {
     Imu::enable();
-    ROS_INFO("IMU enabled");
+    ROS_INFO_NAMED(imuLogName, "IMU enabled");
 }
 
 void RosImu::resetIMU()
 {
     Imu::reset();
-    ROS_INFO("IMU reset");
+    ROS_INFO_NAMED(imuLogName, "IMU reset");
 }
 
-int getInterruptPin()
+int getInterruptPin(const ros::NodeHandle& nh)
 {
     int pin;
-    if(ros::param::get("~imuInterruptPin", pin))
+    if(nh.getParam("interruptPin", pin))
         return pin;
 
-    cerr << "imuInterruptPin must be set." << endl;
+    ROS_FATAL_NAMED(imuLogName, "interruptPin must be set.");
     exit(EXIT_FAILURE);
 }
 
-RosImu::RosImu(std::function<void(const RosImu::Data &)> dataReady) : Imu(getInterruptPin())
+RosImu::RosImu(std::function<void(const RosImu::Data &)> dataReady, ros::NodeHandle nh) : Imu(getInterruptPin(nh))
 {
     this->dataReady = dataReady;
-    ROS_DEBUG("Eigen %d.%d.%d", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
-    getParams();
+    ROS_DEBUG_NAMED(imuLogName, "Eigen %d.%d.%d", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
+    getParams(nh);
 
     double sampleRate;
-    ros::param::param<double>("~imuSampleRate", sampleRate, 200.0);
+    nh.param<double>("sampleRate", sampleRate, 200.0);
     int dlpfMode;
-    ros::param::param<int>("~imuDlpfMode", dlpfMode, 0x01);
-    ros::param::param<double>("g", g, 9.8);
+    nh.param<int>("dlpfMode", dlpfMode, 0x01);
+
+    std::string key;
+    if (nh.searchParam("g", key))
+        nh.getParam(key, g);
 
     resetIMU();
     this_thread::sleep_for(100ms);
