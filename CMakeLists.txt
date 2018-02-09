@@ -141,15 +141,13 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_motor_driver src/motor_driver.cpp)
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
-add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_encoder.cpp)
+add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_encoder.cpp src/ros_motor.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-set_target_properties(${PROJECT_NAME}_motor_driver PROPERTIES OUTPUT_NAME motor_driver PREFIX "")
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controller PREFIX "")
 
@@ -158,9 +156,6 @@ set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controll
 # add_dependencies(${PROJECT_NAME}_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_motor_driver
-  ${catkin_LIBRARIES}
-)
 target_link_libraries(${PROJECT_NAME}_gyro_offset
   ${PROJECT_NAME}_libimu
 )

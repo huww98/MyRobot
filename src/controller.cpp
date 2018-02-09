@@ -3,6 +3,7 @@
 
 #include "ros_imu.h"
 #include "ros_encoder.h"
+#include "ros_motor.h"
 #include "spsc_bounded_queue.h"
 
 struct WheelVelocity
@@ -42,6 +43,11 @@ int main(int argc, char **argv)
     RosEncoder leftEncoder(leftVelocityUpdated, leftEncoderNode, "leftEncoder");
     ros::NodeHandle rightEncoderNode("~rightEncoder");
     RosEncoder rightEncoder(rightVelocityUpdated, rightEncoderNode, "rightEncoder");
+
+    ros::NodeHandle leftMotorNode("~leftMotor");
+    RosMotor leftMotor(leftMotorNode, "leftMotor");
+    ros::NodeHandle rightMotorNode("~rightMotor");
+    RosMotor rightMotor(rightMotorNode, "rightMotor");
 
     ros::waitForShutdown();
 
