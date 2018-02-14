@@ -4,7 +4,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-piHostName="pi"
+piHostName="huww-pi"
 
 echo syncing code to $piHostName
 rsync -rt --delete ./ $piHostName:~/catkin_ws/src/my_robot/
