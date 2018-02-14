@@ -17,7 +17,7 @@ void RosEncoder::pinChanged(const DigitalValue &currentValue)
         auto interval = now - lastTickTime;
         lastTickTime = now;
         encoder::Data data;
-        if (interval > maxInterval)
+        if (interval > maxInterval*2)
             data.velocity = this->minVelocity / 2;
         else
             data.velocity = meterPerTickTimesCountPerSecond / interval.count();

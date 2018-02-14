@@ -14,7 +14,7 @@ void RosMotor::command(double power)
 RosMotor::RosMotor(ros::NodeHandle nh, string name): name(name)
 {
     string devPath;
-    if(!ros::param::get("~device", devPath))
+    if (!nh.getParam("device", devPath))
     {
         ROS_FATAL_NAMED(logName, "%s: device parameter required.", name.c_str());
         ROS_BREAK();

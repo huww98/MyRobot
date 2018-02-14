@@ -17,8 +17,8 @@ inline int i2c_smbus_read_block_data(int file, uint8_t command,
     union i2c_smbus_data data;
     data.block[0] = size;
     int result;
-    if (result = i2c_smbus_access(file, I2C_SMBUS_READ, command,
-                         I2C_SMBUS_I2C_BLOCK_DATA, &data))
+    if ((result = i2c_smbus_access(file, I2C_SMBUS_READ, command,
+                         I2C_SMBUS_I2C_BLOCK_DATA, &data)))
         return result;
     else
     {
