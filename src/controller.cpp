@@ -6,27 +6,21 @@
 #include "ros_motor.h"
 #include "spsc_bounded_queue.h"
 
-struct WheelVelocity
-{
-    double velocity;
-    std::chrono::steady_clock::time_point time;
-};
+SpscBoundedQueue<imu::Data> imuQueue(128);
+SpscBoundedQueue<encoder::Data> leftWheelQueue(128);
+SpscBoundedQueue<encoder::Data> rightWheelQueue(128);
 
-SpscBoundedQueue<RosImu::Data> imuQueue(16);
-SpscBoundedQueue<WheelVelocity> leftWheelQueue(8);
-SpscBoundedQueue<WheelVelocity> rightWheelQueue(8);
-
-void leftVelocityUpdated(int tick)
+void leftVelocityUpdated(const encoder::Data &data)
 {
-    leftWheelQueue.enqueue(WheelVelocity());
+    leftWheelQueue.enqueue(data);
 }
 
-void rightVelocityUpdated(int tick)
+void rightVelocityUpdated(const encoder::Data &data)
 {
-    rightWheelQueue.enqueue(WheelVelocity());
+    rightWheelQueue.enqueue(data);
 }
 
-void imuUpdated(const RosImu::Data& data)
+void imuUpdated(const imu::Data &data)
 {
     imuQueue.enqueue(data);
 }

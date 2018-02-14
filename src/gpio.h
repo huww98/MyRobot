@@ -37,7 +37,12 @@ class DigitalGpio
     DigitalGpio(int pin, const Direction &direction);
     void Write(const DigitalValue &value);
     const DigitalValue &Read();
-    void EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr);
+    void EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr)
+    {
+        EnableISR(edge, isr, -1, [] {});
+    }
+    void EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr,
+        int timeout, std::function<void()> timeoutRoutine);
     ~DigitalGpio();
 
     DigitalGpio &operator=(DigitalGpio &&other) = default;
@@ -48,7 +53,8 @@ class DigitalGpio
     int valueFd;
     std::thread isrThread;
 
-    void interruptHandler(std::function<void(const DigitalValue &)>);
+    void interruptHandler(std::function<void(const DigitalValue &)> isr,
+        int timeout, std::function<void()> timeoutRoutine);
 };
 
 #endif

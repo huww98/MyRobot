@@ -79,7 +79,8 @@ const DigitalValue &DigitalGpio::Read()
     return c == '0' ? DigitalValue::LOW : DigitalValue::HIGH;
 }
 
-void DigitalGpio::EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr)
+void DigitalGpio::EnableISR(const Edge &edge, std::function<void(const DigitalValue &)> isr,
+    int timeout, std::function<void()> timeoutRoutine)
 {
     assert(direction == &Direction::IN);
 
@@ -87,7 +88,7 @@ void DigitalGpio::EnableISR(const Edge &edge, std::function<void(const DigitalVa
     edgess << "/sys/class/gpio/gpio" << pin << "/edge";
     writeDataToInterface(edge.buf, edgess.str());
 
-    isrThread = thread(&DigitalGpio::interruptHandler, this, isr);
+    isrThread = thread(&DigitalGpio::interruptHandler, this, isr, timeout, timeoutRoutine);
 }
 
 DigitalGpio::~DigitalGpio()
@@ -95,7 +96,8 @@ DigitalGpio::~DigitalGpio()
     close(this->valueFd);
 }
 
-void DigitalGpio::interruptHandler(std::function<void(const DigitalValue&)> isr)
+void DigitalGpio::interruptHandler(std::function<void(const DigitalValue &)> isr,
+    int timeout, std::function<void()> timeoutRoutine)
 {
     // Try to promote priority
     struct sched_param sched;
@@ -116,10 +118,14 @@ void DigitalGpio::interruptHandler(std::function<void(const DigitalValue&)> isr)
     struct epoll_event events[MAX_EVENTS];
     while (true)
     {
-        int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+        int nfds = epoll_wait(epollfd, events, MAX_EVENTS, timeout);
         if (nfds == -1)
             throw runtime_error("epoll_wait");
-
+        if(nfds == 0)
+        {
+            timeoutRoutine();
+            continue;
+        }
         for (int i = 0; i < nfds; i++)
         {
             isr(this->Read());

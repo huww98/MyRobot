@@ -9,6 +9,8 @@
 using namespace std;
 using namespace std::chrono_literals;
 using namespace Eigen;
+using std::chrono::duration_cast;
+using std::chrono::steady_clock;
 
 Matrix3d RosImu::AccelCorrectMat = Matrix3d::Identity();
 Vector3d RosImu::AccelOffset = Vector3d::Zero();
@@ -64,6 +66,8 @@ void RosImu::setSampleRate(double hz, uint8_t dlpfMode)
     double actualRate = Imu::setSampleRate(hz, dlpfMode);
     ROS_INFO_NAMED(imuLogName, "setting sampling rate to %f Hz", actualRate);
     ROS_INFO_NAMED(imuLogName, "setting digital low-pass filter to mode %d", dlpfMode);
+
+    expectedSampleInterval = duration_cast<steady_clock::duration>(1s / actualRate);
 }
 
 constexpr double PI = 3.14159265358979323846;
@@ -74,10 +78,26 @@ void RosImu::dataReadyHandler()
     auto data = readAll();
     Vector3d rawAccel = Vector3d(data.AccelX, data.AccelY, data.AccelZ);
     Vector3d rawGyro = Vector3d(data.GyroX, data.GyroY, data.GyroZ);
-    RosImu::Data correctedData;
+    imu::Data correctedData;
     correctedData.accel = AccelCorrectMat * (rawAccel + AccelOffset) * g;
     correctedData.gyro = GyroCorrectMat * (rawGyro + GyroOffset) * degreeToRad;
-    ROS_DEBUG_NAMED(imuLogName, "New IMU data. Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%10.6f, %10.6f, %10.6f]",
+
+    auto now = steady_clock::now();
+    auto measuredInterval = now - lastSampleTime;
+    if (measuredInterval <= expectedSampleInterval ||
+        measuredInterval > expectedSampleInterval * 1.8)
+    {
+        lastSampleTime = now;
+        correctedData.time = now;
+    }
+    else
+    {
+        lastSampleTime += expectedSampleInterval;
+        correctedData.time = lastSampleTime;
+    }
+
+    ROS_DEBUG_NAMED(imuLogName, "%lld Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%10.6f, %10.6f, %10.6f]",
+                    correctedData.time.time_since_epoch().count(),
                     correctedData.accel(0), correctedData.accel(1), correctedData.accel(2),
                     correctedData.gyro(0), correctedData.gyro(1), correctedData.gyro(2));
 
@@ -106,7 +126,7 @@ int getInterruptPin(const ros::NodeHandle& nh)
     ROS_BREAK();
 }
 
-RosImu::RosImu(std::function<void(const RosImu::Data &)> dataReady, ros::NodeHandle nh) :
+RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle nh) :
     Imu(getInterruptPin(nh)), dataReady(dataReady)
 {
     ROS_DEBUG_NAMED(imuLogName, "Eigen %d.%d.%d", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);

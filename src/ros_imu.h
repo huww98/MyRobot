@@ -1,21 +1,16 @@
 #include <ros/ros.h>
 #include <functional>
-#include <Eigen/Dense>
 #include "imu.h"
+#include "ros_imu_data.h"
 
 class RosImu: public Imu
 {
   public:
-    struct Data
-    {
-        Eigen::Vector3d accel;
-        Eigen::Vector3d gyro;
-    };
-    RosImu(std::function<void(const Data &)> dataReady, ros::NodeHandle nh);
+    RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle nh);
     void close();
 
   private:
-    std::function<void(const Data &)> dataReady;
+    std::function<void(const imu::Data &)> dataReady;
     void dataReadyHandler();
     void getParams(const ros::NodeHandle&);
     void setSampleRate(double hz, uint8_t dlpfMode);
@@ -28,4 +23,6 @@ class RosImu: public Imu
     static Eigen::Vector3d GyroOffset;
 
     double g = 9.8;
+    std::chrono::steady_clock::time_point lastSampleTime;
+    std::chrono::steady_clock::duration expectedSampleInterval;
 };
