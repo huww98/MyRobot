@@ -73,10 +73,11 @@ int main()
          << "," << setw(10) << offset(1)
          << "," << setw(10) << offset(2) << "]" << endl;
 
-    clog << "进行旋转，收集数据，右轮输出768，预计15s" << endl;
+    const int expectCmd = 800;
+    clog << "进行旋转，收集数据，右轮输出" << expectCmd << "，预计15s" << endl;
     ofstream rightWheel("/dev/gpiopwm/13");
 
-    for (int cmd = 512; cmd <= 768; cmd += 4)
+    for (int cmd = 512; cmd <= expectCmd; cmd += 4)
     {
         rightWheel << cmd << endl;
         this_thread::sleep_for(4ms);

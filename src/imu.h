@@ -6,17 +6,23 @@
 #include <functional>
 #include "gpio.h"
 
-struct ImuData{
+struct GyroData
+{
+    double GyroX;
+    double GyroY;
+    double GyroZ;
+};
+
+struct ImuData : public GyroData
+{
   double AccelX;
   double AccelY;
   double AccelZ;
 
   double Temp;
-
-  double GyroX;
-  double GyroY;
-  double GyroZ;
 };
+
+struct GyroRawData;
 
 class Imu
 {
@@ -40,6 +46,7 @@ class Imu
     inline double readGyroZ() { return readGyroValue(REG_GYRO_ZOUT_H); }
 
     ImuData readAll();
+    GyroData readGyro();
 
     void enableDataReadyInterrupt(std::function<void()> dataReady);
 
@@ -67,6 +74,7 @@ class Imu
     inline double readAccelValue(uint8_t reg) { return readScaledInt16(reg, ACCEL_SCALE); }
     inline double readGyroValue(uint8_t reg) { return readScaledInt16(reg, GYRO_SCALE); }
     double processRawData(uint8_t h, uint8_t l, double scale, double offset = 0);
+    void processGyroRawData(const GyroRawData &, GyroData &);
 };
 
 #endif

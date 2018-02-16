@@ -20,12 +20,15 @@ void RosEncoder::pinChanged(const DigitalValue &currentValue)
         if (interval > maxInterval*2)
             data.velocity = this->minVelocity / 2;
         else
-            data.velocity = meterPerTickTimesCountPerSecond / interval.count();
+            data.velocity = meterPerTickTimesCountPerSecond / interval.count() * collabrateData[tickCount];
 
         data.time = now - interval / 2;
         ROS_DEBUG_NAMED(logName, "%s: %lld velocity: %lf ", name.c_str(),
                         data.time.time_since_epoch().count(), data.velocity);
         tick(data);
+
+        tickCount++;
+        tickCount %= collabrateData.size();
     }
 
     lastState = &currentValue;
@@ -80,6 +83,15 @@ RosEncoder::RosEncoder(std::function<void(const encoder::Data &)> tick, ros::Nod
     duration<double> maxIntervalSecond(1 / (tickPerMeter * minVelocity));
     this->maxInterval = duration_cast<steady_clock::duration>(maxIntervalSecond);
     int maxIntervalms = duration_cast<chrono::milliseconds>(maxIntervalSecond).count();
+
+    XmlRpc::XmlRpcValue collabrateDataParam;
+    if (nh.getParam("collabrateData", collabrateDataParam))
+    {
+        for (size_t i = 0; i < collabrateDataParam.size(); i++)
+            collabrateData.push_back(collabrateDataParam[i]);
+    }
+    else
+        collabrateData.push_back(1.0);
 
     pin.EnableISR(Edge::BOTH, [this](const DigitalValue &v) { this->pinChanged(v); },
                   maxIntervalms, [this] { this->timeouted(); });

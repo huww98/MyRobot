@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <string>
 #include <functional>
+#include <vector>
 
 #include "gpio.h"
 #include "ros_encoder_data.h"
@@ -21,6 +22,8 @@ class RosEncoder
     double meterPerTickTimesCountPerSecond;
     const DigitalValue *lastState;
     int timeoutTickCount = 0;
+    int tickCount = 0;
+    std::vector<double> collabrateData;
 
     void pinChanged(const DigitalValue &currentValue);
     void timeouted();

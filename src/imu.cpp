@@ -73,6 +73,16 @@ double Imu::readScaledInt16(uint8_t reg, double scale)
     return data * scale;
 }
 
+struct GyroRawData
+{
+    uint8_t GYRO_XOUT_H;
+    uint8_t GYRO_XOUT_L;
+    uint8_t GYRO_YOUT_H;
+    uint8_t GYRO_YOUT_L;
+    uint8_t GYRO_ZOUT_H;
+    uint8_t GYRO_ZOUT_L;
+};
+
 struct ImuRawData {
     uint8_t ACCEL_XOUT_H;
     uint8_t ACCEL_XOUT_L;
@@ -84,12 +94,7 @@ struct ImuRawData {
     uint8_t TEMP_OUT_H;
     uint8_t TEMP_OUT_L;
 
-    uint8_t GYRO_XOUT_H;
-    uint8_t GYRO_XOUT_L;
-    uint8_t GYRO_YOUT_H;
-    uint8_t GYRO_YOUT_L;
-    uint8_t GYRO_ZOUT_H;
-    uint8_t GYRO_ZOUT_L;
+    GyroRawData GyroData;
 };
 static_assert(sizeof(ImuRawData) == 14, "Imu raw data should be 14 byte long");
 
@@ -97,6 +102,22 @@ double Imu::processRawData(uint8_t h, uint8_t l, double scale, double offset)
 {
     int16_t data = h << 8 | l;
     return data * scale + offset;
+}
+
+void Imu::processGyroRawData(const GyroRawData &rawData, GyroData &data)
+{
+    data.GyroX = processRawData(rawData.GYRO_XOUT_H, rawData.GYRO_XOUT_L, GYRO_SCALE);
+    data.GyroY = processRawData(rawData.GYRO_YOUT_H, rawData.GYRO_YOUT_L, GYRO_SCALE);
+    data.GyroZ = processRawData(rawData.GYRO_ZOUT_H, rawData.GYRO_ZOUT_L, GYRO_SCALE);
+}
+
+GyroData Imu::readGyro()
+{
+    GyroRawData rawData;
+    i2c_smbus_read_block_data(i2c_fd, REG_ACCEL_XOUT_H, sizeof(rawData), (uint8_t *)&rawData);
+    GyroData data;
+    processGyroRawData(rawData, data);
+    return data;
 }
 
 ImuData Imu::readAll()
@@ -108,9 +129,7 @@ ImuData Imu::readAll()
     data.AccelY = processRawData(rawData.ACCEL_YOUT_H, rawData.ACCEL_YOUT_L, ACCEL_SCALE);
     data.AccelZ = processRawData(rawData.ACCEL_ZOUT_H, rawData.ACCEL_ZOUT_L, ACCEL_SCALE);
     data.Temp = processRawData(rawData.TEMP_OUT_H, rawData.TEMP_OUT_L, TEMP_SCALE, TEMP_OFFSET);
-    data.GyroX = processRawData(rawData.GYRO_XOUT_H, rawData.GYRO_XOUT_L, GYRO_SCALE);
-    data.GyroY = processRawData(rawData.GYRO_YOUT_H, rawData.GYRO_YOUT_L, GYRO_SCALE);
-    data.GyroZ = processRawData(rawData.GYRO_ZOUT_H, rawData.GYRO_ZOUT_L, GYRO_SCALE);
+    processGyroRawData(rawData.GyroData, data);
     return data;
 }
 

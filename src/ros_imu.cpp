@@ -75,18 +75,18 @@ constexpr double degreeToRad = PI / 180.0;
 
 void RosImu::dataReadyHandler()
 {
-    auto data = readAll();
-    Vector3d rawAccel = Vector3d(data.AccelX, data.AccelY, data.AccelZ);
+    auto data = readGyro();
     Vector3d rawGyro = Vector3d(data.GyroX, data.GyroY, data.GyroZ);
     imu::Data correctedData;
-    correctedData.accel = AccelCorrectMat * (rawAccel + AccelOffset) * g;
-    correctedData.gyro = GyroCorrectMat * (rawGyro + GyroOffset) * degreeToRad;
+    Vector3d gyro = GyroCorrectMat * (rawGyro + GyroOffset) * degreeToRad;
+    correctedData.angularVecocity = gyro(3);
 
     auto now = steady_clock::now();
     auto measuredInterval = now - lastSampleTime;
     if (measuredInterval <= expectedSampleInterval ||
-        measuredInterval > expectedSampleInterval * 1.8)
+        measuredInterval > expectedSampleInterval * 1.5)
     {
+        ROS_WARN_NAMED(imuLogName, "interval too large, some readings may be dropped");
         lastSampleTime = now;
         correctedData.time = now;
     }
@@ -96,10 +96,9 @@ void RosImu::dataReadyHandler()
         correctedData.time = lastSampleTime;
     }
 
-    ROS_DEBUG_NAMED(imuLogName, "%lld Accel: [%10.6f,%10.6f,%10.6f] Gyro: [%10.6f, %10.6f, %10.6f]",
+    ROS_DEBUG_NAMED(imuLogName, "%lld angular velocity: %f",
                     correctedData.time.time_since_epoch().count(),
-                    correctedData.accel(0), correctedData.accel(1), correctedData.accel(2),
-                    correctedData.gyro(0), correctedData.gyro(1), correctedData.gyro(2));
+                    correctedData.angularVecocity);
 
     this->dataReady(correctedData);
 }

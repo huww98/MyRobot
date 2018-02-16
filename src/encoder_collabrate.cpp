@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
     array<size_t, 2> initCounts = {rawData[0].size(),
                                    rawData[1].size()};
-    while (rawData[0].size() < initCounts[0] + 200)
+    while (rawData[0].size() < initCounts[0] + 120)
     {
         this_thread::sleep_for(10ms);
     }
