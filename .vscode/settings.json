@@ -47,6 +47,9 @@
         "istream": "cpp",
         "streambuf": "cpp",
         "algorithm": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "variant": "cpp",
+        "string_view": "cpp",
+        "numeric": "cpp"
     }
 }

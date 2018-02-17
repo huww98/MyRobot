@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <functional>
+#include <Eigen/Dense>
 #include "imu.h"
 #include "ros_imu_data.h"
 
@@ -17,10 +18,10 @@ class RosImu: public Imu
     void enableIMU();
     void resetIMU();
 
-    static Eigen::Matrix3d AccelCorrectMat;
-    static Eigen::Vector3d AccelOffset;
-    static Eigen::Matrix3d GyroCorrectMat;
-    static Eigen::Vector3d GyroOffset;
+    Eigen::Matrix3d AccelCorrectMat;
+    Eigen::Vector3d AccelOffset;
+    Eigen::Matrix3d GyroCorrectMat;
+    Eigen::Vector3d GyroOffset;
 
     double g = 9.8;
     std::chrono::steady_clock::time_point lastSampleTime;
