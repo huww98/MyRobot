@@ -146,7 +146,7 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/encoder_collabrate.cpp)
-add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_motor.cpp)
+add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_motor.cpp src/kf.cpp src/kf_step.cpp src/control_scheduler.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

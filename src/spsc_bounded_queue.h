@@ -50,13 +50,13 @@ class SpscBoundedQueue
         return false;
     }
 
-    bool dequeue(T* &output)
+    bool dequeue(T &output)
     {
         const size_t tail = _tail.load(std::memory_order_relaxed);
 
         if (((_head.load(std::memory_order_acquire) - tail) & _mask) >= 1)
         {
-            output = reinterpret_cast<T*>(&_buffer[tail & _mask]);
+            output = *reinterpret_cast<T*>(&_buffer[tail & _mask]);
             _tail.store(tail + 1, std::memory_order_release);
             return true;
         }

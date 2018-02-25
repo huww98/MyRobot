@@ -12,5 +12,6 @@ class KalmanFilter : public kf::KalmanFilter<2>
     using Base = kf::KalmanFilter<2>;
 
   public:
+    KalmanFilter();
     State GetLatestState() const;
 };

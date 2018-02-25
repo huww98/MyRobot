@@ -1,4 +1,18 @@
 #include "kf.h"
+#include "kf_step.h"
+
+using namespace std;
+
+KalmanFilter::StepPtr buildFirstStep()
+{
+    KalmanFilter::StepPtr firstStep(new PredictStep(PredictStep::TimePoint::min(), ControlCommand{{0, 0}, {0, 0}}));
+    firstStep->Run(PredictStep::StateType{PredictStep::StateType::ValueVector::Zero(), PredictStep::StateType::CovMat::Zero()});
+    return firstStep;
+}
+
+KalmanFilter::KalmanFilter() : Base(buildFirstStep())
+{
+}
 
 State KalmanFilter::GetLatestState() const
 {
