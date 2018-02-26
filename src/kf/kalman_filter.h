@@ -19,7 +19,7 @@ class KalmanFilter
 
     KalmanFilter(StepPtr &&firstStep)
     {
-        StepList.push_back(std::move(firstStep));
+        pendingSteps.push_back(std::move(firstStep));
     }
 
     void Predict(PredictStepPtr &&newStep)
@@ -30,16 +30,17 @@ class KalmanFilter
 
     void Update(UpdateStepPtr &&newStep, bool dropHistory)
     {
+        UpdateStepType *newStepPtr;
         auto pos = insertStep(std::move(newStep));
         auto beforePos = pos;
         beforePos--;
-        if (auto pStep = dynamic_cast<PredictStepType *>(beforePos.get()))
+        if (auto pStep = dynamic_cast<PredictStepType *>((*beforePos).get()))
         {
-            pos->SetPredictStep(pStep->Clone());
+            newStepPtr->SetPredictStep(PredictStepPtr(pStep->Clone()));
         }
-        else if (auto uStep = dynamic_cast<UpdateStepType *>(beforePos.get()))
+        else if (auto uStep = dynamic_cast<UpdateStepType *>((*beforePos).get()))
         {
-            pos->SetPredictStep(uStep->GetPredictStep()->Clone());
+            newStepPtr->SetPredictStep(PredictStepPtr(uStep->GetPredictStep()->Clone()));
         }
         else
         {
@@ -61,7 +62,7 @@ class KalmanFilter
     typename StepList::iterator insertStep(StepPtr &&newStep, bool dropHistory = false)
     {
         auto insertPos = pendingSteps.end();
-        while (insertPos->GetTime() > newStep->GetTime())
+        while ((*insertPos)->GetTime() > newStep->GetTime())
             insertPos--;
         return pendingSteps.insert(insertPos, std::move(newStep));
     }
@@ -73,12 +74,16 @@ class KalmanFilter
         auto afterStartPos = startPos;
         afterStartPos++;
 
-        startPos->UpdateParameters(startPos->GetTime() - beforeStartPos->GetTime());
-        afterStartPos->UpdateParameters(afterStartPos->GetTime() - startPos->GetTime());
+        auto &beforeStartPtr = *beforeStartPos;
+        auto &startPtr = *startPos;
+        auto &afterStartPtr = *afterStartPos;
 
-        auto state = beforeStartPos->GetFinishedState();
+        startPtr->GenerateParameters(startPtr->GetTime() - beforeStartPtr->GetTime());
+        afterStartPtr->GenerateParameters(afterStartPtr->GetTime() - startPtr->GetTime());
+
+        auto state = beforeStartPtr->GetFinishedState();
         for (auto runningPos = startPos; runningPos != pendingSteps.end(); runningPos++)
-            state = runningPos->Run(state);
+            state = (*runningPos)->Run(state);
 
         if (dropHistory)
         {

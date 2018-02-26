@@ -12,11 +12,6 @@ using namespace Eigen;
 using std::chrono::duration_cast;
 using std::chrono::steady_clock;
 
-Matrix3d RosImu::AccelCorrectMat = Matrix3d::Identity();
-Vector3d RosImu::AccelOffset = Vector3d::Zero();
-Matrix3d RosImu::GyroCorrectMat = Matrix3d::Identity();
-Vector3d RosImu::GyroOffset = Vector3d::Zero();
-
 constexpr auto imuLogName = "imu";
 
 template <typename Derived>

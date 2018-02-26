@@ -35,7 +35,7 @@ void enqueueNewData(SpscBoundedQueue<dataType> &dataQuery, const dataType &data,
         cv.notify_one();
     }
     else
-        ROS_WARN("%s is full, new data discarded.", queryName);
+        ROS_WARN("%s is full, new data discarded.", queryName.c_str());
 }
 
 void leftVelocityUpdated(const encoder::Data &data)

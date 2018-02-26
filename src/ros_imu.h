@@ -18,10 +18,10 @@ class RosImu: public Imu
     void enableIMU();
     void resetIMU();
 
-    Eigen::Matrix3d AccelCorrectMat;
-    Eigen::Vector3d AccelOffset;
-    Eigen::Matrix3d GyroCorrectMat;
-    Eigen::Vector3d GyroOffset;
+    Eigen::Matrix3d AccelCorrectMat = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d AccelOffset = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d GyroCorrectMat = Eigen::Matrix3d::Identity();
+    Eigen::Vector3d GyroOffset = Eigen::Vector3d::Zero();
 
     double g = 9.8;
     std::chrono::steady_clock::time_point lastSampleTime;

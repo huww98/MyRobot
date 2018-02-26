@@ -16,4 +16,4 @@ class ControlScheduler
     TimePoint lastControlTime;
     TimePoint scheduledTime;
     int skippedControlStep;
-}
+};
