@@ -69,17 +69,18 @@ class KalmanFilter
 
     void UpdateLatestState(typename StepList::iterator startPos, bool dropHistory)
     {
-        auto beforeStartPos = startPos;
-        beforeStartPos--;
-        auto afterStartPos = startPos;
-        afterStartPos++;
+        auto beforeStartPos = std::prev(startPos);
+        auto afterStartPos = std::next(startPos);
 
         auto &beforeStartPtr = *beforeStartPos;
         auto &startPtr = *startPos;
-        auto &afterStartPtr = *afterStartPos;
 
         startPtr->GenerateParameters(startPtr->GetTime() - beforeStartPtr->GetTime());
-        afterStartPtr->GenerateParameters(afterStartPtr->GetTime() - startPtr->GetTime());
+        if (afterStartPos != pendingSteps.end())
+        {
+            auto &afterStartPtr = *afterStartPos;
+            afterStartPtr->GenerateParameters(afterStartPtr->GetTime() - startPtr->GetTime());
+        }
 
         auto state = beforeStartPtr->GetFinishedState();
         for (auto runningPos = startPos; runningPos != pendingSteps.end(); runningPos++)

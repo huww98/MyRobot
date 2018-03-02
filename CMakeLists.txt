@@ -135,6 +135,9 @@ add_library(${PROJECT_NAME}_librosencoder STATIC
 add_library(${PROJECT_NAME}_libgpio STATIC
   src/gpio.cpp
 )
+add_library(${PROJECT_NAME}_librosmotor STATIC
+    src/ros_motor.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -146,7 +149,14 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/encoder_collabrate.cpp)
-add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp src/ros_imu.cpp src/ros_motor.cpp src/kf.cpp src/kf_step.cpp src/control_scheduler.cpp)
+add_executable(${PROJECT_NAME}_driver_node
+    src/driver_node.cpp
+    src/ros_imu.cpp
+    src/ros_controller.cpp
+    src/kf.cpp
+    src/kf_step.cpp
+    src/control_scheduler.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -171,6 +181,7 @@ target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libimu
   ${PROJECT_NAME}_librosencoder
+  ${PROJECT_NAME}_librosmotor
 )
 target_link_libraries(${PROJECT_NAME}_libgpio
   Threads::Threads

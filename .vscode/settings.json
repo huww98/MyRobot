@@ -50,6 +50,7 @@
         "filesystem": "cpp",
         "variant": "cpp",
         "string_view": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "string": "cpp"
     }
 }

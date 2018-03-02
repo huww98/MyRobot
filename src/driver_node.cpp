@@ -6,6 +6,7 @@
 #include "ros_imu.h"
 #include "ros_encoder.h"
 #include "ros_motor.h"
+#include "ros_controller.h"
 #include "spsc_bounded_queue.h"
 #include "kf.h"
 #include "kf_step.h"
@@ -65,6 +66,9 @@ int main(int argc, char **argv)
 
     RosMotor leftMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
     RosMotor rightMotor(ros::NodeHandle("~rightMotor"), "rightMotor");
+
+    RosController leftController(ros::NodeHandle("~leftController"), "leftController", leftMotor);
+    RosController rightController(ros::NodeHandle("~rightController"), "rightController", rightMotor);
 
     RosImu imu(imuUpdated, ros::NodeHandle("~imu"));
 
