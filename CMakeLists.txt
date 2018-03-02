@@ -121,6 +121,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+  src/
   ${EIGEN3_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
 )
@@ -136,7 +137,7 @@ add_library(${PROJECT_NAME}_libgpio STATIC
   src/gpio.cpp
 )
 add_library(${PROJECT_NAME}_librosmotor STATIC
-    src/ros_motor.cpp
+  src/ros_motor.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -147,8 +148,9 @@ add_library(${PROJECT_NAME}_librosmotor STATIC
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
-add_executable(${PROJECT_NAME}_encoder_collabrate src/encoder_collabrate.cpp)
+add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
+add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
+add_executable(${PROJECT_NAME}_velocity_voltage_map src/tools/velocity_voltage_map.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
     src/ros_imu.cpp
@@ -176,6 +178,10 @@ target_link_libraries(${PROJECT_NAME}_gyro_offset
 )
 target_link_libraries(${PROJECT_NAME}_encoder_collabrate
   ${PROJECT_NAME}_librosencoder
+)
+target_link_libraries(${PROJECT_NAME}_velocity_voltage_map
+  ${PROJECT_NAME}_librosencoder
+  ${PROJECT_NAME}_librosmotor
 )
 target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}

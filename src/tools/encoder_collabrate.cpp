@@ -13,7 +13,7 @@ using namespace std;
 using namespace std::chrono_literals;
 
 array<vector<encoder::Data>, 2> rawData;
-atomic<bool> collectData(true);
+atomic<bool> collectData(false);
 
 template <size_t idx>
 void encoderUpdated(const encoder::Data &data)
@@ -41,9 +41,8 @@ int main(int argc, char **argv)
     }
     this_thread::sleep_for(1s);
 
-    array<size_t, 2> initCounts = {rawData[0].size(),
-                                   rawData[1].size()};
-    while (rawData[0].size() < initCounts[0] + 120)
+    collectData.store(true);
+    while (rawData[0].size() < 120)
     {
         this_thread::sleep_for(10ms);
     }
@@ -55,7 +54,7 @@ int main(int argc, char **argv)
     cout << fixed << setprecision(4);
     for (int num = 0; num < 2; num++)
     {
-        for (int i = initCounts[num]; i < rawData[num].size() - 19; i++)
+        for (int i = 0; i < rawData[num].size() - 19; i++)
         {
             int calculatingIndex = i + 10;
             double sum = 0;
@@ -69,6 +68,7 @@ int main(int argc, char **argv)
             ratesData[num][calculatingIndex % 20].push_back(rate);
         }
 
+        //calculate variance
         double var = 0.0;
         int count = 0;
         for (auto &rates : ratesData[num])

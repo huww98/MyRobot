@@ -9,7 +9,7 @@ piHostName="huww-pi"
 echo syncing code to $piHostName
 rsync -rt --delete ./ $piHostName:~/catkin_ws/src/my_robot/
 
-ssh $piHostName 'source /opt/ros/kinetic/setup.bash && export CLICOLOR_FORCE=1 && catkin_make --directory ~/catkin_ws --only-pkg-with-deps my_robot' || {
+ssh $piHostName 'source /opt/ros/kinetic/setup.bash && export CLICOLOR_FORCE=1 && catkin_make -j2 --directory ~/catkin_ws --only-pkg-with-deps my_robot' || {
     echo -e "${RED}build failed${NC}"
     exit 1
 }

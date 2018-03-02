@@ -8,10 +8,10 @@ auto logName = "controller";
 RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &motor)
     : motor(&motor), name(name)
 {
-    vector<double> vecList, voltageList;
-    if (!nh.getParam("vecList", vecList))
+    vector<double> velocityList, voltageList;
+    if (!nh.getParam("velocityList", velocityList))
     {
-        ROS_FATAL_NAMED(logName, "%s: vecList parameter must be set.", name.c_str());
+        ROS_FATAL_NAMED(logName, "%s: velocityList parameter must be set.", name.c_str());
         ROS_BREAK();
     }
     if (!nh.getParam("voltageList", voltageList))
@@ -19,20 +19,20 @@ RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &mot
         ROS_FATAL_NAMED(logName, "%s: voltageList parameter must be set.", name.c_str());
         ROS_BREAK();
     }
-    if (vecList.size() != voltageList.size())
+    if (velocityList.size() != voltageList.size())
     {
-        ROS_FATAL_NAMED(logName, "%s: vecList and voltageList must be at the same length.", name.c_str());
+        ROS_FATAL_NAMED(logName, "%s: velocityList and voltageList must be at the same length.", name.c_str());
         ROS_BREAK();
     }
-    if (vecList.size() < 2)
+    if (velocityList.size() < 2)
     {
-        ROS_FATAL_NAMED(logName, "%s: vecList must be at least 2 in length.", name.c_str());
+        ROS_FATAL_NAMED(logName, "%s: velocityList must be at least 2 in length.", name.c_str());
         ROS_BREAK();
     }
 
-    for (int i = 0; i < vecList.size(); i++)
+    for (int i = 0; i < velocityList.size(); i++)
     {
-        vecVoltageMap.insert(make_pair(vecList[i], voltageList[i]));
+        vecVoltageMap.insert(make_pair(velocityList[i], voltageList[i]));
     }
 
     if (!nh.getParam("touqueCmdMutiplier", touqueVoltageMutiplier))
