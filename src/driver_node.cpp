@@ -58,24 +58,18 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "controller");
     ros::NodeHandle nh;
 
-    double controlFrequency;
-    nh.param("controlFrequency", controlFrequency, 500.0);
+    double controlFrequency = nh.param("controlFrequency", 500.0);
     ControlScheduler scheduler(controlFrequency);
 
     KalmanFilter kf;
 
-    ros::NodeHandle leftMotorNode("~leftMotor");
-    RosMotor leftMotor(leftMotorNode, "leftMotor");
-    ros::NodeHandle rightMotorNode("~rightMotor");
-    RosMotor rightMotor(rightMotorNode, "rightMotor");
+    RosMotor leftMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
+    RosMotor rightMotor(ros::NodeHandle("~rightMotor"), "rightMotor");
 
-    ros::NodeHandle imuNode("~imu");
-    RosImu imu(imuUpdated, imuNode);
+    RosImu imu(imuUpdated, ros::NodeHandle("~imu"));
 
-    ros::NodeHandle leftEncoderNode("~leftEncoder");
-    RosEncoder leftEncoder(leftVelocityUpdated, leftEncoderNode, "leftEncoder");
-    ros::NodeHandle rightEncoderNode("~rightEncoder");
-    RosEncoder rightEncoder(rightVelocityUpdated, rightEncoderNode, "rightEncoder");
+    RosEncoder leftEncoder(leftVelocityUpdated, ros::NodeHandle("~leftEncoder"), "leftEncoder");
+    RosEncoder rightEncoder(rightVelocityUpdated, ros::NodeHandle("~rightEncoder"), "rightEncoder");
 
     while (ros::ok())
     {

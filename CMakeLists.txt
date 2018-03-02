@@ -146,7 +146,7 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_gyro_offset src/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/encoder_collabrate.cpp)
-add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src/ros_motor.cpp src/kf.cpp src/kf_step.cpp src/control_scheduler.cpp)
+add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp src/ros_imu.cpp src/ros_motor.cpp src/kf.cpp src/kf_step.cpp src/control_scheduler.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -154,11 +154,11 @@ add_executable(${PROJECT_NAME}_controller src/controller.cpp src/ros_imu.cpp src
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
-set_target_properties(${PROJECT_NAME}_controller PROPERTIES OUTPUT_NAME controller PREFIX "")
+set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_driver_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_gyro_offset
@@ -167,7 +167,7 @@ target_link_libraries(${PROJECT_NAME}_gyro_offset
 target_link_libraries(${PROJECT_NAME}_encoder_collabrate
   ${PROJECT_NAME}_librosencoder
 )
-target_link_libraries(${PROJECT_NAME}_controller
+target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libimu
   ${PROJECT_NAME}_librosencoder
