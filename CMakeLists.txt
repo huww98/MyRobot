@@ -166,6 +166,7 @@ add_executable(${PROJECT_NAME}_driver_node
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
+set_target_properties(${PROJECT_NAME}_velocity_voltage_map PROPERTIES OUTPUT_NAME velocity_voltage_map PREFIX "")
 set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable

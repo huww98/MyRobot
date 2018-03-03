@@ -8,18 +8,19 @@ constexpr int maxCmd = 1023;
 
 void RosMotor::command(double outputVoltage)
 {
-    if(outputVoltage <= 0.0)
+    if(outputVoltage < 1e-9)
     {
-        ROS_WARN_NAMED(logName, "%s: outputVoltage %f below 0, outputing 0 cmd", name.c_str(), outputVoltage);
+        ROS_WARN_COND_NAMED(outputVoltage < -1e-9, logName, "%s: outputVoltage %f below 0, outputing 0 cmd", name.c_str(), outputVoltage);
+        ROS_DEBUG_NAMED(logName, "%s: output voltage: %f very small, cmd 0", name.c_str(), outputVoltage);
         motorDev << 0 << endl;
         return;
     }
     /*
-    Vo = outputVoltage, Vd = droidDeadZoomVoltage, Vb = batteryVoltage, c = cmd
+    Vo = outputVoltage, Vd = droidDeadZoomVoltage, Vb = batteryVoltage, c = cmd/maxCmd
     Vo = c*Vb - (1-c)(Vb+Vd)
     Accroding to the motor driver chip data sheet
     */
-    int cmd = round((outputVoltage + batteryVoltage + droidDeadZoomVoltage) / (2 * batteryVoltage + droidDeadZoomVoltage));
+    int cmd = round((outputVoltage + batteryVoltage + droidDeadZoomVoltage) / (2 * batteryVoltage + droidDeadZoomVoltage) * maxCmd);
     ROS_DEBUG_NAMED(logName, "%s: output voltage %f cmd %d", name.c_str(), outputVoltage, cmd);
     ROS_WARN_COND_NAMED(cmd > maxCmd * 1.02, logName, "%s: cmd %d out of range, reset to %d", name.c_str(), cmd, maxCmd);
     cmd = min(maxCmd, cmd);
@@ -44,7 +45,7 @@ RosMotor::RosMotor(ros::NodeHandle nh, string name) : name(name)
     string key;
     if (!nh.searchParam("batteryVoltage", key))
     {
-        ROS_FATAL_NAMED(logName, "%s: device parameter required.", name.c_str());
+        ROS_FATAL_NAMED(logName, "%s: batteryVoltage parameter required.", name.c_str());
         ROS_BREAK();
     }
     nh.getParam(key, batteryVoltage);

@@ -26,6 +26,7 @@ void encoderUpdated(const encoder::Data &data)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "encoder_collabrate");
+    ros::NodeHandle nh;
 
     RosEncoder lEncoder(encoderUpdated<0>, ros::NodeHandle("~leftEncoder"), "leftEncoder");
     RosEncoder rEncoder(encoderUpdated<1>, ros::NodeHandle("~rightEncoder"), "rightEncoder");

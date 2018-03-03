@@ -93,6 +93,8 @@ RosEncoder::RosEncoder(std::function<void(const encoder::Data &)> tick, ros::Nod
     else
         collabrateData.push_back(1.0);
 
+    ROS_DEBUG_NAMED(logName, "%s: enabling ISR", name.c_str());
     pin.EnableISR(Edge::BOTH, [this](const DigitalValue &v) { this->pinChanged(v); },
                   maxIntervalms, [this] { this->timeouted(); });
+    ROS_DEBUG_NAMED(logName, "%s: init complete", name.c_str());
 }
