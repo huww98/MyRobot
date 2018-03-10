@@ -42,7 +42,7 @@ RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &mot
     }
 }
 
-void RosController::IssueCommand(double currentVelocity, double expectedtouque)
+void RosController::IssueCommand(double currentVelocity, double expectedTouque)
 {
     double maintainSpeedVoltage;
     auto upperPair = vecVoltageMap.upper_bound(currentVelocity);
@@ -60,7 +60,37 @@ void RosController::IssueCommand(double currentVelocity, double expectedtouque)
         maintainSpeedVoltage = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
     }
 
-    double touqueVoltage = expectedtouque * touqueVoltageMutiplier;
+    double touqueVoltage = expectedTouque * touqueVoltageMutiplier;
     double v = maintainSpeedVoltage + touqueVoltage;
     motor->command(v);
+}
+
+auto diffLogName = "diffController";
+
+RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, std::string name, RosController &leftController, RosController &rightController)
+    : leftController(&leftController), rightController(&rightController), name(name)
+{
+    string key;
+    if(!nh.searchParam("baseWidth", key))
+    {
+        ROS_FATAL_NAMED(diffLogName, "%s: baseWidth parameter must be set.", name.c_str());
+        ROS_BREAK();
+    }
+    nh.getParam(key, baseWidth);
+
+    if (!nh.searchParam("inertiaFactor", key))
+    {
+        ROS_FATAL_NAMED(diffLogName, "%s: baseWidth parameter must be set.", name.c_str());
+        ROS_BREAK();
+    }
+    nh.getParam(key, inertiaFactor);
+}
+
+void RosDiffrentalController::IssueCommand(double currentLeftVelocity, double currentRightVelocity, double acceleration, double angularAcceleration)
+{
+    double leftA = acceleration - baseWidth * angularAcceleration / 2 * inertiaFactor;
+    double rightA = acceleration + baseWidth * angularAcceleration / 2 * inertiaFactor;
+
+    leftController->IssueCommand(currentLeftVelocity, leftA);
+    rightController->IssueCommand(currentRightVelocity, rightA);
 }

@@ -1,5 +1,7 @@
 <launch>
     <param name="g" value="9.792" />
+    <param name="baseWidth" value="0.131" />
+    <param name="inertiaFactor" value="1" />
     <group ns="encoder">
         <param name="tickPerMeter" value="97.94" />
         <param name="minVelocity" value="0.05" />
