@@ -9,12 +9,14 @@
 class RosEncoder
 {
   public:
-    RosEncoder(std::function<void(const encoder::Data &)> tick, ros::NodeHandle nh, std::string name);
+    using TickCallbackType = std::function<void(const encoder::Data &)>;
+    RosEncoder(TickCallbackType tick, ros::NodeHandle nh, std::string name);
+    int currentTick() const { return tickCount; }
 
   private:
     const std::string name;
     DigitalGpio pin;
-    std::function<void(const encoder::Data &)> tick;
+    TickCallbackType tick;
     std::chrono::steady_clock::time_point lastTickTime;
     std::chrono::steady_clock::duration maxInterval;
     double minVelocity;

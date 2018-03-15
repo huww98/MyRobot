@@ -150,7 +150,7 @@ add_library(${PROJECT_NAME}_librosmotor STATIC
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
-add_executable(${PROJECT_NAME}_velocity_voltage_map src/tools/velocity_voltage_map.cpp)
+add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
     src/ros_imu.cpp
@@ -166,7 +166,7 @@ add_executable(${PROJECT_NAME}_driver_node
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
-set_target_properties(${PROJECT_NAME}_velocity_voltage_map PROPERTIES OUTPUT_NAME velocity_voltage_map PREFIX "")
+set_target_properties(${PROJECT_NAME}_experiment_tools PROPERTIES OUTPUT_NAME experiment_tools PREFIX "")
 set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable
@@ -180,7 +180,7 @@ target_link_libraries(${PROJECT_NAME}_gyro_offset
 target_link_libraries(${PROJECT_NAME}_encoder_collabrate
   ${PROJECT_NAME}_librosencoder
 )
-target_link_libraries(${PROJECT_NAME}_velocity_voltage_map
+target_link_libraries(${PROJECT_NAME}_experiment_tools
   ${PROJECT_NAME}_librosencoder
   ${PROJECT_NAME}_librosmotor
 )

@@ -17,18 +17,24 @@ void RosEncoder::pinChanged(const DigitalValue &currentValue)
         auto interval = now - lastTickTime;
         lastTickTime = now;
         encoder::Data data;
-        if (interval > maxInterval*2)
-            data.velocity = this->minVelocity / 2;
-        else
-            data.velocity = meterPerTickTimesCountPerSecond / interval.count() * collabrateData[tickCount];
-
         data.time = now - interval / 2;
-        ROS_DEBUG_NAMED(logName, "%s: %lld velocity: %lf ", name.c_str(),
-                        data.time.time_since_epoch().count(), data.velocity);
+        if (interval > maxInterval*2)
+        {
+            data.velocity = this->minVelocity / 2;
+            ROS_DEBUG_NAMED(logName, "%s: %lld lnterval too large, velocity: %lf, tick: %d", name.c_str(),
+                            data.time.time_since_epoch().count(), data.velocity, tickCount);
+        }
+        else
+        {
+            double rawV = meterPerTickTimesCountPerSecond / interval.count();
+            data.velocity = rawV * collabrateData[tickCount % collabrateData.size()];
+            ROS_DEBUG_NAMED(logName, "%s: %lld raw velocity: %lf, collabrated velocity: %lf, tick: %d", name.c_str(),
+                            data.time.time_since_epoch().count(), rawV, data.velocity, tickCount);
+        }
+
         tick(data);
 
         tickCount++;
-        tickCount %= collabrateData.size();
     }
 
     lastState = &currentValue;
@@ -60,7 +66,7 @@ int getPin(const ros::NodeHandle &nh, string name)
     ROS_BREAK();
 }
 
-RosEncoder::RosEncoder(std::function<void(const encoder::Data &)> tick, ros::NodeHandle nh, string name)
+RosEncoder::RosEncoder(TickCallbackType tick, ros::NodeHandle nh, string name)
     : pin(getPin(nh, name), Direction::IN), name(name), tick(tick)
 {
     double tickPerMeter;
@@ -84,11 +90,9 @@ RosEncoder::RosEncoder(std::function<void(const encoder::Data &)> tick, ros::Nod
     this->maxInterval = duration_cast<steady_clock::duration>(maxIntervalSecond);
     int maxIntervalms = duration_cast<chrono::milliseconds>(maxIntervalSecond).count();
 
-    XmlRpc::XmlRpcValue collabrateDataParam;
-    if (nh.getParam("collabrateData", collabrateDataParam))
+    if (nh.getParam("collabrateData", collabrateData))
     {
-        for (size_t i = 0; i < collabrateDataParam.size(); i++)
-            collabrateData.push_back(collabrateDataParam[i]);
+        ROS_INFO_NAMED(logName, "collabrate data loaded");
     }
     else
         collabrateData.push_back(1.0);
