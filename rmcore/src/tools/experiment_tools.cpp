@@ -5,8 +5,8 @@
 #include <mutex>
 #include <numeric>
 #include <iostream>
-#include "ros_motor.h"
-#include "ros_encoder.h"
+#include "../ros_motor.h"
+#include "../ros_encoder.h"
 
 using namespace std;
 using namespace std::chrono_literals;

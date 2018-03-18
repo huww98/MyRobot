@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(my_robot)
+project(rmcore)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 set(CMAKE_CXX_STANDARD 14)
@@ -10,7 +10,6 @@ add_definitions("-fdiagnostics-color")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  differential_drive
   roscpp
   roslaunch
 )
@@ -121,7 +120,6 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-  src/
   ${EIGEN3_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
 )

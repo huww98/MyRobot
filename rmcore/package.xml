@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>my_robot</name>
+  <name>rmcore</name>
   <version>0.0.0</version>
-  <description>The my_robot package</description>
+  <description>The rmcore package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="huww@todo.todo">huww</maintainer>
+  <maintainer email="huww98@outlook.com">胡玮文</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -48,7 +48,6 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
 
-  <depend>differential_drive</depend>
   <depend>roscpp</depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>

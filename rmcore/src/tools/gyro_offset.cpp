@@ -9,7 +9,7 @@
 #include <cmath>
 #include <vector>
 
-#include "imu.h"
+#include "../imu.h"
 
 using namespace std;
 using namespace std::chrono_literals;
