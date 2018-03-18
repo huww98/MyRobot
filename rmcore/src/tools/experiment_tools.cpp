@@ -7,6 +7,7 @@
 #include <iostream>
 #include "../ros_motor.h"
 #include "../ros_encoder.h"
+#include "../ros_imu.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -54,6 +55,17 @@ void softStartup(double targetVoltage)
     this_thread::sleep_for(1s); //wait for stable
 }
 
+void softStartupLeft(double targetVoltage)
+{
+    for (double v = 0; v <= targetVoltage; v += 0.02) //soft startup
+    {
+        lMotor->command(v);
+        this_thread::sleep_for(1ms);
+    }
+    lMotor->command(targetVoltage);
+    this_thread::sleep_for(1s); //wait for stable
+}
+
 void collectEncoderData(size_t size)
 {
     enableDataCollection();
@@ -62,6 +74,26 @@ void collectEncoderData(size_t size)
         this_thread::sleep_for(10ms);
     }
     collectData.store(false);
+}
+
+vector<imu::Data> imuRawData;
+atomic<bool> collectImuData(false);
+mutex imuM;
+
+void imuUpdate(const imu::Data &data)
+{
+    lock_guard<mutex> lock(imuM);
+    if (collectImuData)
+    {
+        imuRawData.push_back(data);
+    }
+}
+
+void enableImuDataCollection()
+{
+    lock_guard<mutex> lock(imuM);
+    imuRawData.clear();
+    collectImuData.store(true);
 }
 
 int main(int argc, char **argv)
@@ -74,6 +106,9 @@ int main(int argc, char **argv)
 
     lMotor = new RosMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
     rMotor = new RosMotor(ros::NodeHandle("~rightMotor"), "rightMotor");
+
+    RosImu imu(imuUpdate, ros::NodeHandle("~imu"));
+
     ROS_DEBUG("ros init completed");
 
     double batteryVoltage;
@@ -83,7 +118,8 @@ int main(int argc, char **argv)
     ROS_INFO("init completed");
 
     clog << "1. velocity voltage map\n"
-         << "2. acceleration test" << endl;
+         << "2. acceleration test\n"
+         << "3. inertia test" << endl;
 
     int expNum;
     cin >> expNum;
@@ -145,6 +181,23 @@ int main(int argc, char **argv)
                 cout << d.time.time_since_epoch().count() << " " << d.velocity << endl;
             }
             cout << endl;
+        }
+    }
+
+    case 3:
+    {
+        constexpr double startV = 5.0;
+        softStartupLeft(startV);
+        enableImuDataCollection();
+        this_thread::sleep_for(0.5s);
+        lMotor->command(startV + 1.0);
+        this_thread::sleep_for(1.5s);
+        collectImuData.store(false);
+        cmd(0);
+
+        for (auto &d : imuRawData)
+        {
+            cout << d.time.time_since_epoch().count() << " " << d.angularVecocity << endl;
         }
     }
     }

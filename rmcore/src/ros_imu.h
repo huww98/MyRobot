@@ -18,8 +18,6 @@ class RosImu: public Imu
     void enableIMU();
     void resetIMU();
 
-    Eigen::Matrix3d AccelCorrectMat = Eigen::Matrix3d::Identity();
-    Eigen::Vector3d AccelOffset = Eigen::Vector3d::Zero();
     Eigen::Matrix3d GyroCorrectMat = Eigen::Matrix3d::Identity();
     Eigen::Vector3d GyroOffset = Eigen::Vector3d::Zero();
 

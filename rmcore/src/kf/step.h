@@ -8,35 +8,6 @@
 
 namespace kf
 {
-template <int stateCount, int ControlVectorLength>
-struct SystemModel
-{
-    Eigen::Matrix<double, stateCount, stateCount> F;
-    Eigen::Matrix<double, stateCount, ControlVectorLength> B;
-    Eigen::Matrix<double, stateCount, stateCount> NoiseCov;
-};
-
-template <int stateCount, int ControlVectorLength>
-struct PredictParameters
-{
-    SystemModel<stateCount, ControlVectorLength> Model;
-    Eigen::Matrix<double, ControlVectorLength, 1> ControlVector;
-};
-
-template <int stateCount, int ObservationVectorLength>
-struct ObservationModel
-{
-    Eigen::Matrix<double, ObservationVectorLength, stateCount> H;
-    Eigen::Matrix<double, ObservationVectorLength, ObservationVectorLength> NoiseCov;
-};
-
-template <int stateCount, int ObservationVectorLength>
-struct UpdateParameters
-{
-    ObservationModel<stateCount, ObservationVectorLength> Model;
-    Eigen::Matrix<double, ObservationVectorLength, 1> ObservationVector;
-};
-
 template <int stateCount>
 struct State
 {
@@ -46,129 +17,196 @@ struct State
     CovMat Covariance;
 };
 
-template <int stateCount>
+template <int stateCount, typename StateT = State<stateCount>>
 class Step
 {
   public:
-    using StateType = State<stateCount>;
-    using TimePoint = std::chrono::steady_clock::time_point;
-    using Duration = std::chrono::steady_clock::duration;
+    using TimePointType = std::chrono::steady_clock::time_point;
+    using DurationType = std::chrono::steady_clock::duration;
+    using StateType = StateT;
+    static_assert(std::is_base_of_v<State<stateCount>, StateType>, "StateType must be a descendant of State<stateCount>");
 
-    Step(TimePoint time) : time(time) {}
+    Step(TimePointType time) : time(time) {}
 
     const StateType &GetFinishedState() const { return finishedState; }
-    TimePoint GetTime() const { return time; }
+    TimePointType GetTime() const { return time; }
 
     virtual const StateType &Run(const StateType &initialState) = 0;
-    virtual void GenerateParameters(Duration duration) {}
+    virtual void SetDuration(DurationType duration) {}
 
   protected:
-    TimePoint time;
+    TimePointType time;
     StateType finishedState;
 };
 
-template <int stateCount>
-class PredictStepBase : public Step<stateCount>{
-  private:
-    using Base = Step<stateCount>;
-
+class DurationObject
+{
   public:
-    using Base::Base;
-    virtual PredictStepBase *Clone() const = 0;
+    using DurationType = std::chrono::steady_clock::duration;
+    virtual void SetDuration(DurationType duration){};
 };
 
-template <int stateCount, int ControlVectorLength>
-class PredictStep : public PredictStepBase<stateCount>
+template <int stateCount, typename StateT = State<stateCount>>
+class Predictor : public DurationObject
+{
+  public:
+    using StateType = StateT;
+
+    struct PredictParameters
+    {
+        using FType = Eigen::Matrix<double, stateCount, stateCount>;
+        using NoiseCovType = Eigen::Matrix<double, stateCount, stateCount>;
+        using StateVecType = typename StateType::ValueVector;
+
+        StateVecType NextStateVec;
+        FType F;
+        NoiseCovType NoiseCov;
+    };
+
+    virtual StateType Predict(const StateType &initialState)
+    {
+        auto[nextStateVec, F, noiseCov] = this->GetParameters(initialState);
+
+        StateType nextState;
+        nextState.State = nextStateVec;
+        nextState.Covariance = F * initialState.Covariance * F.transpose() + noiseCov;
+        return nextState;
+    }
+
+    virtual PredictParameters GetParameters(const StateType &initialState) = 0;
+};
+
+template <int stateCount, typename StateType = State<stateCount>>
+class PredictStep : public Step<stateCount, StateType>
 {
   private:
-    using Base = PredictStepBase<stateCount>;
+    using Base = Step<stateCount, StateType>;
 
   public:
-    using typename Base::StateType;
-    using typename Base::TimePoint;
-    using ControlVector = Eigen::Matrix<double, ControlVectorLength, 1>;
-    using PredictParametersType = PredictParameters<stateCount, ControlVectorLength>;
+    using PredictorType = Predictor<stateCount, StateType>;
+    using PredictorPtr = std::shared_ptr<PredictorType>;
+    using typename Base::DurationType;
+    using typename Base::TimePointType;
 
-    PredictStep(TimePoint time) : Base(time) {}
+    PredictStep(TimePointType time, PredictorPtr &predictor)
+        : Base(time), predictor(predictor)
+    {
+    }
 
     virtual const StateType &Run(const StateType &initialState) override
     {
-        auto &F = predictParameters.Model.F;
-        auto &B = predictParameters.Model.B;
-
-        this->finishedState.State = F * initialState.State + B * predictParameters.ControlVector;
-        this->finishedState.Covariance = F * initialState.Covariance * F.transpose() + predictParameters.Model.NoiseCov;
-        return this->finishedState;
+        this->finishedState = predictor->Predict(initialState);
     }
 
-  protected:
-    PredictParametersType predictParameters;
+    virtual void SetDuration(DurationType duration) override
+    {
+        this->predictor->SetDuration(duration);
+    }
+
+    PredictorPtr GetPredictor() { return this->predictor; }
+
+  private:
+    PredictorPtr predictor;
 };
 
-template <int stateCount>
-class UpdateStepBase : public Step<stateCount>
+template <int stateCount, typename StateType = State<stateCount>>
+class UpdaterBase : public DurationObject
 {
-  private:
-    using Base = Step<stateCount>;
-
   public:
-    using Base::Base;
-    using PredictStepType = PredictStepBase<stateCount>;
-    using PredictStepPtr = std::unique_ptr<PredictStepType>;
-
-    void SetPredictStep(PredictStepPtr &&pStep)
-    {
-        predictStep = std::move(pStep);
-    }
-
-    PredictStepType *GetPredictStep()
-    {
-        return predictStep.get();
-    }
-
-  protected:
-    PredictStepPtr predictStep;
+    virtual StateType Update(const StateType &predictedState) = 0;
 };
 
-template <int stateCount, int ObservationVectorLength>
-class UpdateStep : public UpdateStepBase<stateCount>
+template <int stateCount, int ObservationVectorLength, typename StateType = State<stateCount>>
+class Updater : public UpdaterBase<stateCount, StateType>
 {
-  private:
-    using Base = UpdateStepBase<stateCount>;
-
   public:
-    using typename Base::StateType;
-    using typename Base::TimePoint;
-    using typename Base::Duration;
-    using ObservationVector = Eigen::Matrix<double, ObservationVectorLength, 1>;
-    using ObservationCovMat = Eigen::Matrix<double, ObservationVectorLength, ObservationVectorLength>;
-    using UpdateParametersType = UpdateParameters<stateCount, ObservationVectorLength>;
-
-    UpdateStep(TimePoint time)
-        : Base(time)
-    {}
-
-    virtual const StateType &Run(const StateType &initialState) override
+    struct UpdateParameters
     {
-        auto &H = updateParameters.Model.H;
-        auto &ObservationNoiseCov = updateParameters.Model.NoiseCov;
-        auto &predictedState = this->predictStep->Run(initialState);
+        using HType = Eigen::Matrix<double, ObservationVectorLength, stateCount>;
+        using NoiseCovType = Eigen::Matrix<double, ObservationVectorLength, ObservationVectorLength>;
+        using ObservationVectorType = Eigen::Matrix<double, ObservationVectorLength, 1>;
 
-        ObservationVector innovation = updateParameters.ObservationVector - H * predictedState.State;
-        ObservationCovMat innovationCov = ObservationNoiseCov + H * predictedState.Covariance * H.transpose();
+        ObservationVectorType Innovation;
+        HType H;
+        NoiseCovType NoiseCov;
+    };
+
+    virtual UpdateParameters GetParameters(const StateType &predictedState) = 0;
+
+    virtual StateType Update(const StateType &predictedState) override
+    {
+        auto[innovation, H, noiseCov] = GetParameters(predictedState);
+        StateType nextState;
+
+        typename UpdateParameters::NoiseCovType innovationCov = noiseCov + H * predictedState.Covariance * H.transpose();
         Eigen::Matrix<double, stateCount, ObservationVectorLength> gain = predictedState.Covariance * H.transpose() * innovationCov.inverse();
-        this->finishedState.State = predictedState.State + gain * innovation;
-        typename StateType::CovMat temp = StateType::CovMat::Identity() - gain * H;
-        this->finishedState.Covariance = temp * predictedState.Covariance * temp.transpose() + gain * ObservationNoiseCov * gain.transpose();
+        nextState.State = predictedState.State + gain * innovation;
+        nextState.Covariance = StateType::CovMat::Identity() - gain * H * predictedState.Covariance;
+        return nextState;
     }
+};
 
-    virtual void GenerateParameters(Duration duration) override
-    {
-        this->predictStep->GenerateParameters(duration);
-    }
+template <int stateCount, int ObservationVectorLength, typename StateType = State<stateCount>>
+class LinearUpdater : public Updater<stateCount, ObservationVectorLength, StateType>
+{
+  private:
+    using Base = Updater<stateCount, ObservationVectorLength, StateType>;
+
+  public:
+    using typename Base::UpdateParameters;
 
   protected:
-    UpdateParametersType updateParameters;
+    typename UpdateParameters::HType *pH;
+    typename UpdateParameters::NoiseCovType noiseCov;
+    typename UpdateParameters::ObservationVectorType observationVector;
+
+  public:
+    virtual UpdateParameters GetParameters(const StateType &predictedState) override
+    {
+        UpdateParameters params;
+        auto &H = *pH;
+        params.Innovation = observationVector - H * predictedState.State;
+        params.H = H;
+        params.NoiseCov = noiseCov;
+        return params;
+    }
+};
+
+template <int stateCount, typename StateType = State<stateCount>>
+class UpdateStep : public Step<stateCount, StateType>
+{
+  private:
+    using Base = Step<stateCount, StateType>;
+
+  public:
+    using typename Base::DurationType;
+    using typename Base::TimePointType;
+    using PredictorType = Predictor<stateCount, StateType>;
+    using PredictorPtr = std::shared_ptr<PredictorType>;
+    using UpdaterType = UpdaterBase<stateCount, StateType>;
+    using UpdaterPtr = std::unique_ptr<UpdaterType>;
+
+    UpdateStep(TimePointType time, PredictorPtr &predictor, UpdaterPtr &&updater)
+        : Base(time), predictor(predictor), updater(std::move(updater))
+    {
+    }
+
+    virtual const StateType &Run(const StateType &initialState) override
+    {
+        this->updater->Update(this->predictor->Predict(initialState));
+    }
+
+    virtual void SetDuration(DurationType duration) override
+    {
+        this->updater->SetDuration(duration);
+        this->predictor->SetDuration(duration);
+    }
+
+    PredictorPtr GetPredictor() { return this->predictor; }
+
+  protected:
+    PredictorPtr predictor;
+    UpdaterPtr updater;
 };
 }
 

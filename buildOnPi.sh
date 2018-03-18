@@ -9,7 +9,7 @@ piHostName="huww-pi"
 echo syncing code to $piHostName
 rsync -rtz ./ $piHostName:~/catkin_ws/src/
 
-ssh $piHostName 'source /opt/ros/kinetic/setup.bash && export CLICOLOR_FORCE=1 && catkin_make -j2 --directory ~/catkin_ws --only-pkg-with-deps rmcore' || {
+ssh $piHostName 'source /opt/ros/kinetic/setup.bash && export CLICOLOR_FORCE=1 && catkin_make -j2 --directory ~/catkin_ws --only-pkg-with-deps rmcore -- rmcore_experiment_tools' || {
     echo -e "${RED}build failed${NC}"
     exit 1
 }

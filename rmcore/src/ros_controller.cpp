@@ -5,8 +5,7 @@ using namespace std;
 
 auto logName = "controller";
 
-RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &motor)
-    : motor(&motor), name(name)
+LinearInterpolation buildVelVolInterpolation(ros::NodeHandle &nh, string name)
 {
     vector<double> velocityList, voltageList;
     if (!nh.getParam("velocityList", velocityList))
@@ -30,39 +29,49 @@ RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &mot
         ROS_BREAK();
     }
 
-    for (int i = 0; i < velocityList.size(); i++)
-    {
-        vecVoltageMap.insert(make_pair(velocityList[i], voltageList[i]));
-    }
+    return LinearInterpolation(velocityList, voltageList);
+}
 
-    if (!nh.getParam("touqueCmdMutiplier", touqueVoltageMutiplier))
+RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &motor)
+    : motor(&motor), name(name), velocityVoltageInterpolation(buildVelVolInterpolation(nh, name))
+{
+    if (!nh.getParam("touqueVoltageMutiplier", touqueVoltageMutiplier))
     {
-        ROS_FATAL_NAMED(logName, "%s: touqueCmdMutiplier parameter must be set.", name.c_str());
+        ROS_FATAL_NAMED(logName, "%s: touqueVoltageMutiplier parameter must be set.", name.c_str());
         ROS_BREAK();
     }
 }
 
+double RosController::calcMaintainSpeedVoltage(double velocity, double &k)
+{
+    return velocityVoltageInterpolation.Y(velocity, k);
+}
+
+double RosController::calcMaintainSpeedVoltage(double velocity)
+{
+    double k;
+    return calcMaintainSpeedVoltage(velocity, k);
+}
+
+// 力矩单位定义：在直线行驶使，两个轮子各输出一个单位力矩，可使小车获得1m/s^2的加速度。
 void RosController::IssueCommand(double currentVelocity, double expectedTouque)
 {
-    double maintainSpeedVoltage;
-    auto upperPair = vecVoltageMap.upper_bound(currentVelocity);
-    auto lowerPair = prev(upperPair);
-    if (upperPair == vecVoltageMap.end())
-    {
-        maintainSpeedVoltage = lowerPair->second;
-    }
-    else
-    {
-        auto &x0 = lowerPair->first, &x1 = upperPair->first;
-        auto &y0 = lowerPair->second, &y1 = upperPair->second;
-        auto &x = currentVelocity;
-        //线性插值
-        maintainSpeedVoltage = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-    }
+    double maintainSpeedVoltage = calcMaintainSpeedVoltage(currentVelocity);
 
     double touqueVoltage = expectedTouque * touqueVoltageMutiplier;
     double v = maintainSpeedVoltage + touqueVoltage;
     motor->command(v);
+}
+
+auto RosController::PredictTouque(double currentVelocity, double voltage) -> PredictedTouque
+{
+    double k;
+    double maintainSpeedVoltage = calcMaintainSpeedVoltage(currentVelocity, k);
+    double touqueVoltage = voltage - maintainSpeedVoltage;
+    PredictedTouque pred;
+    pred.Touque = touqueVoltage / touqueVoltageMutiplier;
+    pred.DerivativeOfVelocity = -k / touqueVoltageMutiplier;
+    return pred;
 }
 
 auto diffLogName = "diffController";
@@ -71,26 +80,61 @@ RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, std::string
     : leftController(&leftController), rightController(&rightController), name(name)
 {
     string key;
-    if(!nh.searchParam("baseWidth", key))
+    if (!nh.searchParam("baseWidth", key))
     {
         ROS_FATAL_NAMED(diffLogName, "%s: baseWidth parameter must be set.", name.c_str());
         ROS_BREAK();
     }
     nh.getParam(key, baseWidth);
 
-    if (!nh.searchParam("inertiaFactor", key))
+    // 1为所有质量都集中在两个轮子上时的转动惯量
+    if (!nh.searchParam("inertia", key))
     {
-        ROS_FATAL_NAMED(diffLogName, "%s: baseWidth parameter must be set.", name.c_str());
+        ROS_FATAL_NAMED(diffLogName, "%s: inertia parameter must be set.", name.c_str());
         ROS_BREAK();
     }
-    nh.getParam(key, inertiaFactor);
+    double inertia;
+    nh.getParam(key, inertia);
+    this->inertiaFactor = inertia * baseWidth / 2;
 }
 
-void RosDiffrentalController::IssueCommand(double currentLeftVelocity, double currentRightVelocity, double acceleration, double angularAcceleration)
+auto RosDiffrentalController::calcWheelVelocity(double Velocity, double AngularVelocity) -> WheelVelocity
 {
-    double leftA = acceleration - baseWidth * angularAcceleration / 2 * inertiaFactor;
-    double rightA = acceleration + baseWidth * angularAcceleration / 2 * inertiaFactor;
+    double leftV = Velocity - inertiaFactor * AngularVelocity;
+    double rightV = Velocity + inertiaFactor * AngularVelocity;
+    return WheelVelocity{leftV, rightV};
+}
 
-    leftController->IssueCommand(currentLeftVelocity, leftA);
-    rightController->IssueCommand(currentRightVelocity, rightA);
+void RosDiffrentalController::IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration)
+{
+    auto[leftV, rightV] = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+
+    double leftA = acceleration - angularAcceleration * inertiaFactor;
+    double rightA = acceleration + angularAcceleration * inertiaFactor;
+
+    leftController->IssueCommand(leftV, leftA);
+    rightController->IssueCommand(rightV, rightA);
+}
+
+auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlCommand cmd)
+    -> PredictedAcceleration
+{
+    auto[leftV, rightV] = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+    Eigen::Matrix2d j;
+    j << 1, -inertiaFactor,
+        1, inertiaFactor;
+
+    auto leftPredictedTouque = leftController->PredictTouque(leftV, cmd.leftVoltage);
+    auto rightPredictedTouque = leftController->PredictTouque(rightV, cmd.rightVoltage);
+
+    PredictedAcceleration a;
+    a.linear = (leftPredictedTouque.Touque + rightPredictedTouque.Touque) / 2;
+    a.angular = (rightPredictedTouque.Touque - leftPredictedTouque.Touque) / 2 / inertiaFactor;
+    // 先对轮子的速度求导
+    a.jacobianOfVelocity(0, 0) = leftPredictedTouque.DerivativeOfVelocity / 2;
+    a.jacobianOfVelocity(0, 1) = rightPredictedTouque.DerivativeOfVelocity / 2;
+    a.jacobianOfVelocity(1, 0) = -a.jacobianOfVelocity(0, 0) / inertiaFactor;
+    a.jacobianOfVelocity(1, 1) = a.jacobianOfVelocity(0, 1) / inertiaFactor;
+    a.jacobianOfVelocity *= j;
+    return a;
 }

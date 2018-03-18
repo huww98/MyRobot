@@ -131,6 +131,9 @@ add_library(${PROJECT_NAME}_libimu STATIC
 add_library(${PROJECT_NAME}_librosencoder STATIC
   src/ros_encoder.cpp
 )
+add_library(${PROJECT_NAME}_librosimu STATIC
+  src/ros_imu.cpp
+)
 add_library(${PROJECT_NAME}_libgpio STATIC
   src/gpio.cpp
 )
@@ -151,7 +154,6 @@ add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.c
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
-    src/ros_imu.cpp
     src/ros_controller.cpp
     src/kf.cpp
     src/kf_step.cpp
@@ -180,12 +182,14 @@ target_link_libraries(${PROJECT_NAME}_encoder_collabrate
 )
 target_link_libraries(${PROJECT_NAME}_experiment_tools
   ${PROJECT_NAME}_librosencoder
+  ${PROJECT_NAME}_librosimu
   ${PROJECT_NAME}_librosmotor
 )
 target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libimu
   ${PROJECT_NAME}_librosencoder
+  ${PROJECT_NAME}_librosimu
   ${PROJECT_NAME}_librosmotor
 )
 target_link_libraries(${PROJECT_NAME}_libgpio
@@ -193,6 +197,9 @@ target_link_libraries(${PROJECT_NAME}_libgpio
 )
 target_link_libraries(${PROJECT_NAME}_libimu
   ${PROJECT_NAME}_libgpio
+)
+target_link_libraries(${PROJECT_NAME}_librosimu
+  ${PROJECT_NAME}_libimu
 )
 target_link_libraries(${PROJECT_NAME}_librosencoder
   ${catkin_LIBRARIES}

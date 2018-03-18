@@ -3,21 +3,20 @@
 
 using namespace std;
 
-KalmanFilter::StepPtr buildFirstStep()
+class InitialStep : public KalmanFilter::StepType
 {
-    KalmanFilter::StepPtr firstStep(new PredictStep(PredictStep::TimePoint::min(), ControlCommand{{0, 0}, {0, 0}}));
-    firstStep->Run(PredictStep::StateType{PredictStep::StateType::ValueVector::Zero(), PredictStep::StateType::CovMat::Zero()});
-    return firstStep;
-}
+  private:
+    using Base = KalmanFilter::StepType;
 
-KalmanFilter::KalmanFilter() : Base(buildFirstStep())
-{
-}
+  public:
+    InitialStep():Base(Base::TimePointType::min())
+    {
+        this->finishedState = RobotState();
+    }
 
-State KalmanFilter::GetLatestState() const
+    virtual const StateType &Run(const StateType &initialState) override final {};
+};
+
+KalmanFilter::KalmanFilter() : Base(make_unique<InitialStep>())
 {
-    State state;
-    auto baseState = Base::GetLatestState();
-    state.LeftVelocity = baseState.State(0);
-    state.RightVelocity = baseState.State(1);
 }

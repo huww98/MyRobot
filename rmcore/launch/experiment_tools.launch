@@ -3,7 +3,7 @@
         <param name="tickPerMeter" value="97.94" />
         <param name="minVelocity" value="0.05" />
     </group>
-    <param name="batteryVoltage" value="7.34"/>
+    <param name="batteryVoltage" value="8.20"/>
     <node pkg="my_robot" name="experiment_tools" type="experiment_tools" required="true">
         <rosparam ns="leftEncoder">
             pin: 10
@@ -15,5 +15,14 @@
         </rosparam>
         <param name="leftMotor/device" value="/dev/gpiopwm/18"/>
         <param name="rightMotor/device" value="/dev/gpiopwm/13"/>
+        <rosparam ns="imu">
+            interruptPin: 14
+            sampleRate: 500.0
+            dlpfMode: 0
+            gyroOffset:     [  3.43625,  -3.02888,   0.68914]
+            gyroCorrectMat: [   0.995711,           0,   0.0925233,
+                             0.000449264,    0.999988, -0.00483485,
+                              -0.0925222,  0.00485568,    0.995699]
+        </rosparam>
     </node>
 </launch>

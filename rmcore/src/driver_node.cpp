@@ -91,15 +91,16 @@ int main(int argc, char **argv)
             imu::Data iData;
             while (leftWheelQueue.dequeue(eData))
             {
-                kf.Update(KalmanFilter::UpdateStepPtr(new LeftEncoderUpdateStep(eData)), false);
+                kf.Update(eData.time, make_unique<LeftEncoderUpdater>(eData), false);
             }
             while (rightWheelQueue.dequeue(eData))
             {
-                kf.Update(KalmanFilter::UpdateStepPtr(new RightEncoderUpdateStep(eData)), false);
+                kf.Update(eData.time, make_unique<RightEncoderUpdater>(eData), false);
             }
             while (imuQueue.dequeue(iData))
             {
-                kf.Update(KalmanFilter::UpdateStepPtr(new GyroUpdateStep(iData)), false);
+                // workaround https://github.com/Microsoft/vscode-cpptools/issues/1559, should use make_unique
+                kf.Update(iData.time, KalmanFilter::UpdaterPtr(new GyroUpdater(iData)), false);
             }
         }
         else // issue control command

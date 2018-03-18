@@ -15,15 +15,15 @@ using std::chrono::steady_clock;
 constexpr auto imuLogName = "imu";
 
 template <typename Derived>
-void loadMat(XmlRpc::XmlRpcValue &param, MatrixBase<Derived> &mat)
+void loadMat(vector<double> &param, MatrixBase<Derived> &mat)
 {
     for (int i = 0; i < mat.rows(); i++)
         for (int j = 0; j < mat.cols(); j++)
-            mat(i, j) = param[i][j];
+            mat(i, j) = param[i* mat.cols() + j];
 }
 
 template <typename Derived>
-void loadVec(XmlRpc::XmlRpcValue &param, MatrixBase<Derived> &vec)
+void loadVec(vector<double> &param, MatrixBase<Derived> &vec)
 {
     for (int i = 0; i < vec.size(); i++)
         vec(i) = param[i];
@@ -31,28 +31,18 @@ void loadVec(XmlRpc::XmlRpcValue &param, MatrixBase<Derived> &vec)
 
 void RosImu::getParams(const ros::NodeHandle& nh)
 {
-    XmlRpc::XmlRpcValue am;
-    if (nh.getParam("accelCorrectMat", am))
-    {
-        loadMat(am, AccelCorrectMat);
-    }
-
-    XmlRpc::XmlRpcValue ao;
-    if (nh.getParam("accelOffset", ao))
-    {
-        loadVec(ao, AccelOffset);
-    }
-
-    XmlRpc::XmlRpcValue gm;
-    if (nh.getParam("gyroCorrectMat", gm))
-    {
-        loadMat(gm, GyroCorrectMat);
-    }
-
-    XmlRpc::XmlRpcValue go;
+    vector<double> go;
     if (nh.getParam("gyroOffset", go))
     {
         loadVec(go, GyroOffset);
+        ROS_INFO_NAMED(imuLogName, "gyroOffset loaded.");
+    }
+
+    vector<double> gm;
+    if (nh.getParam("gyroCorrectMat", gm))
+    {
+        loadMat(gm, GyroCorrectMat);
+        ROS_INFO_NAMED(imuLogName, "gyroCorrectMat loaded.");
     }
 }
 
@@ -127,7 +117,7 @@ RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle
     getParams(nh);
 
     double sampleRate;
-    nh.param<double>("sampleRate", sampleRate, 200.0);
+    nh.param<double>("sampleRate", sampleRate, 500.0);
     int dlpfMode;
     nh.param<int>("dlpfMode", dlpfMode, 0x01);
 

@@ -1,51 +1,52 @@
 #include "kf/step.h"
+#include "kf.h"
 #include "ros_encoder_data.h"
 #include "ros_imu_data.h"
+#include "ros_controller.h"
 
-struct MotorCommand
+struct ControlNoise
 {
-    double acceleration;
-    double variance;
+    double linear;
+    double angular;
 };
 
-struct ControlCommand
-{
-    MotorCommand left;
-    MotorCommand right;
-};
-
-class PredictStep : public kf::PredictStep<2, 2>
+class Predictor : public KalmanFilter::PredictorType
 {
   private:
-    using Base = kf::PredictStep<2, 2>;
-    Eigen::Matrix2d covMatBase;
+    using Base = KalmanFilter::PredictorType;
+    ControlCommand cmd;
+    ControlNoise noise;
+    DurationType duration;
+    RosDiffrentalController controller;
 
   public:
-    PredictStep(TimePoint time, const ControlCommand &cmd);
-    void GenerateParameters(Duration duration) override;
-    Base *Clone() const override;
+    Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
+    void SetDuration(DurationType duration) override;
+    virtual PredictParameters GetParameters(const StateType &initialState) override;
+    virtual StateType Predict(const StateType &initialState) override;
 };
 
-template<int idx>
-class EncoderUpdateStep : public kf::UpdateStep<2, 1>
+template <int idx>
+class EncoderUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
 {
-  public:
-    EncoderUpdateStep(const encoder::Data &data);
-
   private:
-    using Base = kf::UpdateStep<2, 1>;
+    using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
+    static UpdateParameters::HType H;
+
+  public:
+    EncoderUpdater(const encoder::Data &data);
+    static void Init(double baseWidth);
 };
 
-using LeftEncoderUpdateStep = EncoderUpdateStep<0>;
-using RightEncoderUpdateStep = EncoderUpdateStep<1>;
+using LeftEncoderUpdater = EncoderUpdater<0>;
+using RightEncoderUpdater = EncoderUpdater<1>;
 
-class GyroUpdateStep : public kf::UpdateStep<2, 1>
+class GyroUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
 {
-  public:
-    GyroUpdateStep(const imu::Data &data);
-
-    static Eigen::Matrix<double, 1, 2> h;
-
   private:
-    using Base = kf::UpdateStep<2, 1>;
+    using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
+    static UpdateParameters::HType H;
+
+  public:
+    GyroUpdater(const imu::Data &data);
 };
