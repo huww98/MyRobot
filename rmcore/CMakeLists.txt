@@ -156,7 +156,6 @@ add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
     src/ros_controller.cpp
     src/kf.cpp
-    src/kf_step.cpp
     src/control_scheduler.cpp
 )
 

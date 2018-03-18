@@ -9,7 +9,6 @@
 #include "ros_controller.h"
 #include "spsc_bounded_queue.h"
 #include "kf.h"
-#include "kf_step.h"
 #include "control_scheduler.h"
 
 using namespace std;
@@ -62,7 +61,13 @@ int main(int argc, char **argv)
     double controlFrequency = nh.param("controlFrequency", 500.0);
     ControlScheduler scheduler(controlFrequency);
 
-    KalmanFilter kf;
+    double baseWidth;
+    if(!nh.getParam("baseWidth", baseWidth))
+    {
+        ROS_FATAL("baseWidth parameter must be set.");
+        ROS_BREAK();
+    }
+    KalmanFilter kf(baseWidth);
 
     RosMotor leftMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
     RosMotor rightMotor(ros::NodeHandle("~rightMotor"), "rightMotor");

@@ -2,6 +2,9 @@
 #define KF_H
 
 #include "kf/kalman_filter.h"
+#include "ros_encoder_data.h"
+#include "ros_imu_data.h"
+#include "ros_controller.h"
 
 class RobotState : public kf::State<5>
 {
@@ -25,7 +28,57 @@ class KalmanFilter : public kf::KalmanFilter<5, RobotState>
     using Base = kf::KalmanFilter<5, RobotState>;
 
   public:
-    KalmanFilter();
+    KalmanFilter(double baseWidth);
+};
+
+struct ControlNoise
+{
+    double linear;
+    double angular;
+};
+
+class Predictor : public KalmanFilter::PredictorType
+{
+  private:
+    using Base = KalmanFilter::PredictorType;
+    ControlCommand cmd;
+    ControlNoise noise;
+    DurationType duration;
+    RosDiffrentalController controller;
+
+  public:
+    Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
+    void SetDuration(DurationType duration) override;
+    virtual PredictParameters GetParameters(const StateType &initialState) override;
+    virtual StateType Predict(const StateType &initialState) override;
+};
+
+template <int idx>
+class EncoderUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
+{
+    friend void InitEncoderUpdater(double baseWidth);
+
+  private:
+    using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
+    static UpdateParameters::HType H;
+
+  public:
+    EncoderUpdater(const encoder::Data &data);
+};
+
+using LeftEncoderUpdater = EncoderUpdater<0>;
+using RightEncoderUpdater = EncoderUpdater<1>;
+
+void InitEncoderUpdater(double baseWidth);
+
+class GyroUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
+{
+  private:
+    using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
+    static UpdateParameters::HType H;
+
+  public:
+    GyroUpdater(const imu::Data &data);
 };
 
 #endif
