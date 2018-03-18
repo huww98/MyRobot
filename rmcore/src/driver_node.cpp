@@ -67,7 +67,6 @@ int main(int argc, char **argv)
         ROS_FATAL("baseWidth parameter must be set.");
         ROS_BREAK();
     }
-    KalmanFilter kf(baseWidth);
 
     RosMotor leftMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
     RosMotor rightMotor(ros::NodeHandle("~rightMotor"), "rightMotor");
@@ -75,10 +74,13 @@ int main(int argc, char **argv)
     RosController leftController(ros::NodeHandle("~leftController"), "leftController", leftMotor);
     RosController rightController(ros::NodeHandle("~rightController"), "rightController", rightMotor);
 
+    RosDiffrentalController controller(ros::NodeHandle("~diffrentialController"), leftController, rightController);
     RosImu imu(imuUpdated, ros::NodeHandle("~imu"));
 
     RosEncoder leftEncoder(leftVelocityUpdated, ros::NodeHandle("~leftEncoder"), "leftEncoder");
     RosEncoder rightEncoder(rightVelocityUpdated, ros::NodeHandle("~rightEncoder"), "rightEncoder");
+
+    KalmanFilter kf(baseWidth, controller);
 
     while (ros::ok())
     {
@@ -96,19 +98,18 @@ int main(int argc, char **argv)
             imu::Data iData;
             while (leftWheelQueue.dequeue(eData))
             {
-                kf.Update(eData.time, make_unique<LeftEncoderUpdater>(eData), false);
+                kf.UpdateLeftEncoder(eData);
             }
             while (rightWheelQueue.dequeue(eData))
             {
-                kf.Update(eData.time, make_unique<RightEncoderUpdater>(eData), false);
+                kf.UpdateRightEncoder(eData);
             }
             while (imuQueue.dequeue(iData))
             {
-                // workaround https://github.com/Microsoft/vscode-cpptools/issues/1559, should use make_unique
-                kf.Update(iData.time, KalmanFilter::UpdaterPtr(new GyroUpdater(iData)), false);
+                kf.UpdateImu(iData);
             }
         }
-        else // issue control command
+        else // Todo: issue control command
         {
             int skippedStep = scheduler.DoControl();
             ROS_WARN_COND(skippedStep > 0, "Skipped %d control command, maybe overloaded.", skippedStep);

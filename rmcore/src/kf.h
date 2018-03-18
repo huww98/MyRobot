@@ -22,19 +22,33 @@ class RobotState : public kf::State<5>
     auto Position() const { return this->State.segment<2>(2); }
 };
 
-class KalmanFilter : public kf::KalmanFilter<5, RobotState>
-{
-  private:
-    using Base = kf::KalmanFilter<5, RobotState>;
-
-  public:
-    KalmanFilter(double baseWidth);
-};
-
 struct ControlNoise
 {
     double linear;
     double angular;
+};
+
+struct ControlParameters
+{
+    ControlCommand command;
+    ControlNoise noise;
+    KalmanFilter::TimePointType time;
+};
+
+class KalmanFilter : public kf::KalmanFilter<5, RobotState>
+{
+  private:
+    using Base = kf::KalmanFilter<5, RobotState>;
+    RosDiffrentalController *controller;
+    template <int idx>
+    void UpdateEncoder(const encoder::Data &data);
+
+  public:
+    KalmanFilter(double baseWidth, RosDiffrentalController &controller);
+    void Predict(const ControlParameters &parameters);
+    void UpdateLeftEncoder(const encoder::Data &data) { UpdateEncoder<0>(data); }
+    void UpdateRightEncoder(const encoder::Data &data) { UpdateEncoder<1>(data); }
+    void UpdateImu(const imu::Data &data);
 };
 
 class Predictor : public KalmanFilter::PredictorType
@@ -71,14 +85,14 @@ using RightEncoderUpdater = EncoderUpdater<1>;
 
 void InitEncoderUpdater(double baseWidth);
 
-class GyroUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
+class ImuUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
 {
   private:
     using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
     static UpdateParameters::HType H;
 
   public:
-    GyroUpdater(const imu::Data &data);
+    ImuUpdater(const imu::Data &data);
 };
 
 #endif

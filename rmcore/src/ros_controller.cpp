@@ -76,13 +76,13 @@ auto RosController::PredictTouque(double currentVelocity, double voltage) -> Pre
 
 auto diffLogName = "diffController";
 
-RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, std::string name, RosController &leftController, RosController &rightController)
-    : leftController(&leftController), rightController(&rightController), name(name)
+RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, RosController &leftController, RosController &rightController)
+    : leftController(&leftController), rightController(&rightController)
 {
     string key;
     if (!nh.searchParam("baseWidth", key))
     {
-        ROS_FATAL_NAMED(diffLogName, "%s: baseWidth parameter must be set.", name.c_str());
+        ROS_FATAL_NAMED(diffLogName, "baseWidth parameter must be set.");
         ROS_BREAK();
     }
     nh.getParam(key, baseWidth);
@@ -90,7 +90,7 @@ RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, std::string
     // 1为所有质量都集中在两个轮子上时的转动惯量
     if (!nh.searchParam("inertia", key))
     {
-        ROS_FATAL_NAMED(diffLogName, "%s: inertia parameter must be set.", name.c_str());
+        ROS_FATAL_NAMED(diffLogName, "inertia parameter must be set.");
         ROS_BREAK();
     }
     double inertia;

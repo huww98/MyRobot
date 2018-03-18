@@ -17,9 +17,26 @@ class InitialStep : public KalmanFilter::StepType
     virtual const StateType &Run(const StateType &initialState) override final {};
 };
 
-KalmanFilter::KalmanFilter(double baseWidth) : Base(make_unique<InitialStep>())
+KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller)
+    : controller(&controller), Base(make_unique<InitialStep>())
 {
     InitEncoderUpdater(baseWidth);
+}
+
+void KalmanFilter::Predict(const ControlParameters &parameters)
+{
+    Base::Predict(parameters.time, make_shared<Predictor>(parameters.command, *controller, parameters.noise));
+}
+
+template<int idx>
+void KalmanFilter::UpdateEncoder(const encoder::Data &data)
+{
+    Base::Update(data.time, make_unique<EncoderUpdater<idx>>(data), false); //Todo: dropHistory
+}
+
+void KalmanFilter::UpdateImu(const imu::Data &data)
+{
+    Base::Update(data.time, make_unique<ImuUpdater>(data), false);
 }
 
 Predictor::Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)
@@ -86,9 +103,9 @@ template class EncoderUpdater<0>;
 template class EncoderUpdater<1>;
 #endif
 
-GyroUpdater::UpdateParameters::HType GyroUpdater::H = (UpdateParameters::HType() << 0, 1, 0, 0, 0).finished();
+ImuUpdater::UpdateParameters::HType ImuUpdater::H = (UpdateParameters::HType() << 0, 1, 0, 0, 0).finished();
 
-GyroUpdater::GyroUpdater(const imu::Data &data)
+ImuUpdater::ImuUpdater(const imu::Data &data)
 {
     this->observationVector << data.angularVecocity;
     this->pH = &H;

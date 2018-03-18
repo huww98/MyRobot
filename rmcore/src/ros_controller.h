@@ -51,7 +51,7 @@ class RosDiffrentalController
         Eigen::Matrix2d Covariance;
     };
 
-    RosDiffrentalController(ros::NodeHandle nh, std::string name, RosController &leftController, RosController &rightController);
+    RosDiffrentalController(ros::NodeHandle nh, RosController &leftController, RosController &rightController);
     void IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration);
     PredictedAcceleration PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlCommand cmd);
 
@@ -59,7 +59,6 @@ class RosDiffrentalController
     RosController *leftController, *rightController;
     double baseWidth;
     double inertiaFactor;
-    std::string name;
 
     struct WheelVelocity
     {
