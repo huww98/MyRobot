@@ -28,17 +28,12 @@ struct ControlNoise
     double angular;
 };
 
-struct ControlParameters
-{
-    ControlCommand command;
-    ControlNoise noise;
-    KalmanFilter::TimePointType time;
-};
+struct ControlParameters;
 
-class KalmanFilter : public kf::KalmanFilter<5, RobotState>
+class KalmanFilter : public kf::KalmanFilter<5, 4, RobotState>
 {
   private:
-    using Base = kf::KalmanFilter<5, RobotState>;
+    using Base = kf::KalmanFilter<5, 4, RobotState>;
     RosDiffrentalController *controller;
     template <int idx>
     void UpdateEncoder(const encoder::Data &data);
@@ -49,6 +44,13 @@ class KalmanFilter : public kf::KalmanFilter<5, RobotState>
     void UpdateLeftEncoder(const encoder::Data &data) { UpdateEncoder<0>(data); }
     void UpdateRightEncoder(const encoder::Data &data) { UpdateEncoder<1>(data); }
     void UpdateImu(const imu::Data &data);
+};
+
+struct ControlParameters
+{
+    ControlCommand command;
+    ControlNoise noise;
+    KalmanFilter::TimePointType time;
 };
 
 class Predictor : public KalmanFilter::PredictorType
@@ -62,28 +64,26 @@ class Predictor : public KalmanFilter::PredictorType
 
   public:
     Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
-    void SetDuration(DurationType duration) override;
-    virtual PredictParameters GetParameters(const StateType &initialState) override;
-    virtual StateType Predict(const StateType &initialState) override;
+    virtual PredictParameters GetParameters(const StateType &initialState, DurationType duration) override;
+    virtual StateType Predict(const StateType &initialState, DurationType duration) override;
 };
+
+void InitEncoderUpdater(double baseWidth);
 
 template <int idx>
 class EncoderUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
 {
-    friend void InitEncoderUpdater(double baseWidth);
-
   private:
     using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
-    static UpdateParameters::HType H;
 
   public:
+    static UpdateParameters::HType H; // declare as public to workaround VSCode bug.
     EncoderUpdater(const encoder::Data &data);
+    friend void InitEncoderUpdater(double baseWidth);
 };
 
 using LeftEncoderUpdater = EncoderUpdater<0>;
 using RightEncoderUpdater = EncoderUpdater<1>;
-
-void InitEncoderUpdater(double baseWidth);
 
 class ImuUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>
 {

@@ -51,6 +51,7 @@
         "variant": "cpp",
         "string_view": "cpp",
         "numeric": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "optional": "cpp"
     }
 }

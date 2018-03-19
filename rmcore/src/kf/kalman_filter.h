@@ -2,11 +2,12 @@
 #define KALMAN_FILTER_H
 
 #include <memory>
+#include <array>
 #include "step.h"
 
 namespace kf
 {
-template <int stateCount, typename StateT = State<stateCount>>
+template <int stateCount, int ParallelUpdateCount, typename StateT = State<stateCount>>
 class KalmanFilter
 {
   public:
@@ -32,24 +33,35 @@ class KalmanFilter
     KalmanFilter(StepPtr &&firstStep)
     {
         pendingSteps.push_back(std::move(firstStep));
+        lastUpdateSteps.fill(pendingSteps.begin());
     }
 
     void Predict(TimePointType time, PredictorPtr &&predictor)
     {
         auto beforePos = findBeforePos(time);
-        doInsert(beforePos, std::make_unique<PredictStepType>(time, predictor), false);
+        auto afterPos = std::next(beforePos);
+        auto updatePos = afterPos;
+        for (; updatePos != pendingSteps.end(); updatePos++)
+        {
+            if(auto uStep = dynamic_cast<UpdateStepType *>(updatePos->get()))
+                uStep->ReplacePredictor(predictor);
+            else
+                break;
+        }
+        doInsert(beforePos, std::make_unique<PredictStepType>(time, predictor));
     }
 
-    void Update(TimePointType time, UpdaterPtr &&updater, bool dropHistory)
+    template <int updateLine>
+    void Update(TimePointType time, UpdaterPtr &&updater)
     {
         auto beforePos = findBeforePos(time);
         PredictorPtr predictor;
 
-        if (auto pStep = dynamic_cast<PredictStepType *>((*beforePos).get()))
+        if (auto pStep = dynamic_cast<PredictStepType *>(beforePos->get()))
         {
             predictor = pStep->GetPredictor();
         }
-        else if (auto uStep = dynamic_cast<UpdateStepType *>((*beforePos).get()))
+        else if (auto uStep = dynamic_cast<UpdateStepType *>(beforePos->get()))
         {
             predictor = uStep->GetPredictor();
         }
@@ -58,18 +70,42 @@ class KalmanFilter
             assert(false);
         }
 
-        doInsert(beforePos, std::make_unique<UpdateStepType>(time, predictor, std::move(updater)), false);
+        doInsert(beforePos, std::make_unique<UpdateStepType>(time, predictor, std::move(updater)));
     }
 
-    const StateType &GetLatestState() const
+    const StateType &GetLatestState()
     {
+        UpdateToLatest();
+
         auto &lastestStep = *pendingSteps.rbegin();
         return lastestStep->GetFinishedState();
+    }
+
+    void SetPredictEndTime(TimePointType t)
+    {
+        predictEndTime = t;
+        auto &lastStep = *pendingSteps.rbegin();
+        lastStep->SetDuration(t - lastStep->GetTime());
+
+        // last state become invalid
+        if (invalidStateBegin == pendingSteps.end())
+            invalidStateBegin = std::prev(pendingSteps.end());
+    }
+
+    void UpdateToLatest()
+    {
+        auto state = (*std::prev(invalidStateBegin))->GetFinishedState();
+        for (auto runningPos = invalidStateBegin; runningPos != pendingSteps.end(); runningPos++)
+            state = (*runningPos)->Run(state);
     }
 
   private:
     using StepList = std::list<StepPtr>;
     StepList pendingSteps;
+    TimePointType predictEndTime;
+    typename StepList::iterator invalidStateBegin;
+
+    std::array<typename StepList::iterator, ParallelUpdateCount> lastUpdateSteps;
 
     typename StepList::iterator findBeforePos(TimePointType time)
     {
@@ -80,29 +116,20 @@ class KalmanFilter
         return insertPos;
     }
 
-    void doInsert(typename StepList::iterator beforePos, StepPtr &&newStep, bool dropHistory)
+    void doInsert(typename StepList::iterator beforePos, StepPtr &&newStep)
     {
-        auto beforeStartPos = beforePos;
-        auto &beforeStartStep = *beforePos;
-        auto afterStartPos = std::next(beforePos);
-        auto &afterStartStep = *afterStartPos;
-        auto startPos = this->pendingSteps.insert(afterStartPos, std::move(newStep));
-        auto &startStep = *startPos;
+        auto &beforeStep = *beforePos;
+        auto afterPos = std::next(beforePos);
+        auto &afterStep = *afterPos;
+        auto insertedPos = this->pendingSteps.insert(afterPos, std::move(newStep));
+        auto &insertedStep = *insertedPos;
 
-        startStep->SetDuration(startStep->GetTime() - beforeStartStep->GetTime());
-        if (afterStartPos != pendingSteps.end())
-        {
-            afterStartStep->SetDuration(afterStartStep->GetTime() - startStep->GetTime());
-        }
+        beforeStep->SetDuration(beforeStep->GetTime() - insertedStep->GetTime());
+        auto endTime = afterPos == pendingSteps.end() ? predictEndTime : afterStep->GetTime();
+        insertedStep->SetDuration(endTime - insertedStep->GetTime());
 
-        auto state = beforeStartStep->GetFinishedState();
-        for (auto runningPos = startPos; runningPos != pendingSteps.end(); runningPos++)
-            state = (*runningPos)->Run(state);
-
-        if (dropHistory)
-        {
-            pendingSteps.erase(pendingSteps.begin(), startPos);
-        }
+        if ((*invalidStateBegin)->GetTime() > insertedStep->GetTime())
+            invalidStateBegin = insertedPos;
     }
 };
 }

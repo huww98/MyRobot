@@ -32,25 +32,20 @@ class Step
     TimePointType GetTime() const { return time; }
 
     virtual const StateType &Run(const StateType &initialState) = 0;
-    virtual void SetDuration(DurationType duration) {}
+    void SetDuration(DurationType d) { this->duration = d; }
 
   protected:
+    DurationType duration;
     TimePointType time;
     StateType finishedState;
 };
 
-class DurationObject
-{
-  public:
-    using DurationType = std::chrono::steady_clock::duration;
-    virtual void SetDuration(DurationType duration){};
-};
-
 template <int stateCount, typename StateT = State<stateCount>>
-class Predictor : public DurationObject
+class Predictor
 {
   public:
     using StateType = StateT;
+    using DurationType = std::chrono::steady_clock::duration;
 
     struct PredictParameters
     {
@@ -63,9 +58,9 @@ class Predictor : public DurationObject
         NoiseCovType NoiseCov;
     };
 
-    virtual StateType Predict(const StateType &initialState)
+    virtual StateType Predict(const StateType &initialState, DurationType duration)
     {
-        auto[nextStateVec, F, noiseCov] = this->GetParameters(initialState);
+        auto[nextStateVec, F, noiseCov] = this->GetParameters(initialState, duration);
 
         StateType nextState;
         nextState.State = nextStateVec;
@@ -73,7 +68,7 @@ class Predictor : public DurationObject
         return nextState;
     }
 
-    virtual PredictParameters GetParameters(const StateType &initialState) = 0;
+    virtual PredictParameters GetParameters(const StateType &initialState, DurationType duration) = 0;
 };
 
 template <int stateCount, typename StateType = State<stateCount>>
@@ -95,12 +90,8 @@ class PredictStep : public Step<stateCount, StateType>
 
     virtual const StateType &Run(const StateType &initialState) override
     {
-        this->finishedState = predictor->Predict(initialState);
-    }
-
-    virtual void SetDuration(DurationType duration) override
-    {
-        this->predictor->SetDuration(duration);
+        this->finishedState = predictor->Predict(initialState, this->duration);
+        return this->finishedState;
     }
 
     PredictorPtr GetPredictor() { return this->predictor; }
@@ -110,7 +101,7 @@ class PredictStep : public Step<stateCount, StateType>
 };
 
 template <int stateCount, typename StateType = State<stateCount>>
-class UpdaterBase : public DurationObject
+class UpdaterBase
 {
   public:
     virtual StateType Update(const StateType &predictedState) = 0;
@@ -193,16 +184,11 @@ class UpdateStep : public Step<stateCount, StateType>
 
     virtual const StateType &Run(const StateType &initialState) override
     {
-        this->updater->Update(this->predictor->Predict(initialState));
-    }
-
-    virtual void SetDuration(DurationType duration) override
-    {
-        this->updater->SetDuration(duration);
-        this->predictor->SetDuration(duration);
+        this->updater->Update(this->predictor->Predict(initialState, this->duration));
     }
 
     PredictorPtr GetPredictor() { return this->predictor; }
+    void ReplacePredictor(PredictorPtr &p) { predictor = p; }
 
   protected:
     PredictorPtr predictor;

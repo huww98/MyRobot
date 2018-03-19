@@ -31,12 +31,12 @@ void KalmanFilter::Predict(const ControlParameters &parameters)
 template<int idx>
 void KalmanFilter::UpdateEncoder(const encoder::Data &data)
 {
-    Base::Update(data.time, make_unique<EncoderUpdater<idx>>(data), false); //Todo: dropHistory
+    Base::Update<idx>(data.time, make_unique<EncoderUpdater<idx>>(data)); //Todo: dropHistory
 }
 
 void KalmanFilter::UpdateImu(const imu::Data &data)
 {
-    Base::Update(data.time, make_unique<ImuUpdater>(data), false);
+    Base::Update<2>(data.time, make_unique<ImuUpdater>(data));
 }
 
 Predictor::Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)
@@ -44,12 +44,7 @@ Predictor::Predictor(const ControlCommand &cmd, const RosDiffrentalController &c
 {
 }
 
-void Predictor::SetDuration(DurationType dur)
-{
-    this->duration = dur;
-}
-
-auto Predictor::GetParameters(const StateType &initialState) -> PredictParameters
+auto Predictor::GetParameters(const StateType &initialState, DurationType duration) -> PredictParameters
 {
     double t = duration_cast<chrono::duration<double>>(duration).count();
 
