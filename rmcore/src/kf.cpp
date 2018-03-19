@@ -28,15 +28,17 @@ void KalmanFilter::Predict(const ControlParameters &parameters)
     Base::Predict(parameters.time, make_shared<Predictor>(parameters.command, *controller, parameters.noise));
 }
 
+constexpr int encoderUpdateLineOffset = 0, imuUpdateLine = 2;
+
 template<int idx>
 void KalmanFilter::UpdateEncoder(const encoder::Data &data)
 {
-    Base::Update<idx>(data.time, make_unique<EncoderUpdater<idx>>(data)); //Todo: dropHistory
+    Base::Update<encoderUpdateLineOffset + idx>(data.time, make_unique<EncoderUpdater<idx>>(data));
 }
 
 void KalmanFilter::UpdateImu(const imu::Data &data)
 {
-    Base::Update<2>(data.time, make_unique<ImuUpdater>(data));
+    Base::Update<imuUpdateLine>(data.time, make_unique<ImuUpdater>(data));
 }
 
 Predictor::Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)

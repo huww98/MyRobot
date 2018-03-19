@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <array>
+#include <algorithm>
 #include "step.h"
 
 namespace kf
@@ -33,7 +34,7 @@ class KalmanFilter
     KalmanFilter(StepPtr &&firstStep)
     {
         pendingSteps.push_back(std::move(firstStep));
-        lastUpdateSteps.fill(pendingSteps.begin());
+        lastUpdatePos.fill(pendingSteps.begin());
     }
 
     void Predict(TimePointType time, PredictorPtr &&predictor)
@@ -43,15 +44,15 @@ class KalmanFilter
         auto updatePos = afterPos;
         for (; updatePos != pendingSteps.end(); updatePos++)
         {
-            if(auto uStep = dynamic_cast<UpdateStepType *>(updatePos->get()))
+            if (auto uStep = dynamic_cast<UpdateStepType *>(updatePos->get()))
                 uStep->ReplacePredictor(predictor);
             else
                 break;
         }
-        doInsert(beforePos, std::make_unique<PredictStepType>(time, predictor));
+        doInsert<0>(beforePos, std::make_unique<PredictStepType>(time, predictor));
     }
 
-    template <int updateLine>
+    template <int UpdateLine>
     void Update(TimePointType time, UpdaterPtr &&updater)
     {
         auto beforePos = findBeforePos(time);
@@ -70,7 +71,7 @@ class KalmanFilter
             assert(false);
         }
 
-        doInsert(beforePos, std::make_unique<UpdateStepType>(time, predictor, std::move(updater)));
+        doInsert<UpdateLine + 1>(beforePos, std::make_unique<UpdateStepType>(time, predictor, std::move(updater)));
     }
 
     const StateType &GetLatestState()
@@ -105,7 +106,7 @@ class KalmanFilter
     TimePointType predictEndTime;
     typename StepList::iterator invalidStateBegin;
 
-    std::array<typename StepList::iterator, ParallelUpdateCount> lastUpdateSteps;
+    std::array<typename StepList::iterator, ParallelUpdateCount + 1> lastUpdatePos; // first one for predict.
 
     typename StepList::iterator findBeforePos(TimePointType time)
     {
@@ -116,6 +117,15 @@ class KalmanFilter
         return insertPos;
     }
 
+    void dropHistory()
+    {
+        auto earestUpdatedPos = *std::min_element(lastUpdatePos.begin(), lastUpdatePos.end(),
+                                                  [](auto a, auto b) { return (*a)->GetTime() < (*b)->GetTime(); });
+
+        pendingSteps.erase(pendingSteps.begin(), earestUpdatedPos);
+    }
+
+    template <int UpdateIndex>
     void doInsert(typename StepList::iterator beforePos, StepPtr &&newStep)
     {
         auto &beforeStep = *beforePos;
@@ -130,6 +140,9 @@ class KalmanFilter
 
         if ((*invalidStateBegin)->GetTime() > insertedStep->GetTime())
             invalidStateBegin = insertedPos;
+
+        lastUpdatePos[UpdateIndex] = insertedPos;
+        dropHistory();
     }
 };
 }
