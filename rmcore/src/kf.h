@@ -65,7 +65,6 @@ class Predictor : public KalmanFilter::PredictorType
   public:
     Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
     virtual PredictParameters GetParameters(const StateType &initialState, DurationType duration) override;
-    virtual StateType Predict(const StateType &initialState, DurationType duration) override;
 };
 
 void InitEncoderUpdater(double baseWidth);

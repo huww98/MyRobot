@@ -36,6 +36,11 @@ void KalmanFilter::UpdateEncoder(const encoder::Data &data)
     Base::Update<encoderUpdateLineOffset + idx>(data.time, make_unique<EncoderUpdater<idx>>(data));
 }
 
+#ifndef __INTELLISENSE__ //workaround https://github.com/Microsoft/vscode-cpptools/issues/871
+template void KalmanFilter::UpdateEncoder<0>(const encoder::Data &data);
+template void KalmanFilter::UpdateEncoder<1>(const encoder::Data &data);
+#endif
+
 void KalmanFilter::UpdateImu(const imu::Data &data)
 {
     Base::Update<imuUpdateLine>(data.time, make_unique<ImuUpdater>(data));

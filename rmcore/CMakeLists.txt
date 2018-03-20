@@ -1,8 +1,12 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.8)
 project(rmcore)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CXX_STANDARD_REQUIRED ON)
+
+message(STATUS "c++ compiler: ${CMAKE_CXX_COMPILER}")
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 add_definitions("-fdiagnostics-color")
 
