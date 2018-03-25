@@ -1,12 +1,12 @@
 <launch>
     <param name="g" value="9.792" />
     <param name="baseWidth" value="0.131" />
-    <param name="inertiaFactor" value="1" />
+    <param name="inertia" value="0.54" />
     <group ns="encoder">
         <param name="tickPerMeter" value="97.94" />
         <param name="minVelocity" value="0.05" />
     </group>
-    <node pkg="my_robot" type="controller" name="controller" required="true">
+    <node pkg="rmcore" type="controller" name="controller" required="true">
         <rosparam ns="leftEncoder">
             pin: 10
             collabrateData: [1.0378, 1.0367, 1.0360, 1.0194, 1.0095, 1.0148, 1.0110, 0.9872, 0.9729, 0.9744, 0.9618, 0.9575, 0.9617, 0.9702, 0.9708, 0.9831, 1.0132, 1.0226, 1.0368, 1.0450]
@@ -31,11 +31,10 @@
             interruptPin: 14
             sampleRate: 500.0
             dlpfMode: 0
-            accelCorrectMat: [[ 0.99343087,  0.00769209,  0.0931366 ],
-                              [-0.00829568,  0.99535705, -0.00993391],
-                              [-0.09324117,  0.0057134 ,  0.96156334]]
-            accelOffset:      [-0.05692667,  0.00276761,  0.13369852]
-            gyroOffset:       [  4.591268, -3.183211, 0.8912088]
+            gyroOffset:     [  3.65464,  -3.02076,  0.670199]
+            gyroCorrectMat: [   0.995762,           0,   0.0919717,
+                             0.000199762,    0.999998, -0.00216279,
+                              -0.0919715,  0.00217199,    0.995759]
         </rosparam>
     </node>
 </launch>

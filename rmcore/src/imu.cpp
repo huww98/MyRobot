@@ -114,7 +114,7 @@ void Imu::processGyroRawData(const GyroRawData &rawData, GyroData &data)
 GyroData Imu::readGyro()
 {
     GyroRawData rawData;
-    i2c_smbus_read_block_data(i2c_fd, REG_ACCEL_XOUT_H, sizeof(rawData), (uint8_t *)&rawData);
+    i2c_smbus_read_block_data(i2c_fd, REG_GYRO_XOUT_H, sizeof(GyroRawData), (uint8_t *)&rawData);
     GyroData data;
     processGyroRawData(rawData, data);
     return data;

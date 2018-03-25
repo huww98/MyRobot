@@ -3,7 +3,7 @@
         <param name="tickPerMeter" value="97.94" />
         <param name="minVelocity" value="0.05" />
     </group>
-    <node pkg="my_robot" name="encoder_collabrate" type="encoder_collabrate" required="true">
+    <node pkg="rmcore" name="encoder_collabrate" type="encoder_collabrate" required="true">
         <param name="leftEncoder/pin" value="10"/>
         <param name="rightEncoder/pin" value="4"/>
     </node>

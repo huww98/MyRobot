@@ -186,12 +186,13 @@ int main(int argc, char **argv)
 
     case 3:
     {
-        constexpr double startV = 5.0;
+        constexpr double startV = 3.5;
         softStartupLeft(startV);
+        this_thread::sleep_for(2s);
         enableImuDataCollection();
-        this_thread::sleep_for(0.5s);
+        this_thread::sleep_for(2s);
         lMotor->command(startV + 1.0);
-        this_thread::sleep_for(1.5s);
+        this_thread::sleep_for(2s);
         collectImuData.store(false);
         cmd(0);
 

@@ -64,22 +64,24 @@ void RosImu::dataReadyHandler()
     Vector3d rawGyro = Vector3d(data.GyroX, data.GyroY, data.GyroZ);
     imu::Data correctedData;
     Vector3d gyro = GyroCorrectMat * (rawGyro + GyroOffset) * degreeToRad;
-    correctedData.angularVecocity = gyro(3);
+    correctedData.angularVecocity = gyro(2);
 
     auto now = steady_clock::now();
     auto measuredInterval = now - lastSampleTime;
-    if (measuredInterval <= expectedSampleInterval ||
-        measuredInterval > expectedSampleInterval * 1.5)
+    if (measuredInterval > expectedSampleInterval * 1.8)
     {
         ROS_WARN_NAMED(imuLogName, "interval too large, some readings may be dropped");
         lastSampleTime = now;
-        correctedData.time = now;
+    }
+    else if(measuredInterval <= expectedSampleInterval)
+    {
+        lastSampleTime = now;
     }
     else
     {
         lastSampleTime += expectedSampleInterval;
-        correctedData.time = lastSampleTime;
     }
+    correctedData.time = lastSampleTime;
 
     ROS_DEBUG_NAMED(imuLogName, "%lld angular velocity: %f",
                     correctedData.time.time_since_epoch().count(),
