@@ -148,6 +148,7 @@ add_library(${PROJECT_NAME}_libcore STATIC
     src/ros_controller.cpp
     src/kf.cpp
     src/control_scheduler.cpp
+    src/state_manager.cpp
 )
 
 ## Add cmake target dependencies of the library
