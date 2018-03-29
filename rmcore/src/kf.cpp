@@ -66,15 +66,16 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
     double dist = meanV * t; //approximate
     double directionAngle = initialState.Angle() + deltaTheta / 2;
     Eigen::Vector2d dirVec(cos(directionAngle), sin(directionAngle));
-    Eigen::Vector2d dirVecDerivativeToTheta(-sin(directionAngle), cos(directionAngle));
+    Eigen::Vector2d dirVecDerivative(-sin(directionAngle), cos(directionAngle));
     Eigen::Vector2d newPos = initialState.Position() + dirVec * dist;
     params.NextStateVec << v, omega, newPos, theta;
+    double halfTSquare = 0.5 * t * t;
     params.F << Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t, Eigen::Matrix<double, 2, 3>::Zero(),
-        t * dirVec, dist * dirVecDerivativeToTheta * t, Eigen::Matrix2d::Identity(), dist * dirVecDerivativeToTheta,
-        0, t, 0, 0, 1;
+        (t + halfTSquare * predictedA.jacobianOfVelocity(0, 0)) * dirVec, dist * dirVecDerivative * t / 2 + halfTSquare * predictedA.jacobianOfVelocity(0, 1) * dirVec, Eigen::Matrix2d::Identity(), dist * dirVecDerivative,
+        halfTSquare * predictedA.jacobianOfVelocity(1, 0), t + halfTSquare * predictedA.jacobianOfVelocity(1, 1), 0, 0, 1;
 
     // 噪音计算是一个近似。方差本应该和时间的平方成正比，但在这个实例中，本次控制与之前的控制结果关系较大，
-    // 其协方差与时间成正比，且方差和写方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的
+    // 其协方差与时间成正比，且方差和协方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的
     // 方差保持在一个值。既不会无限增大，也不会趋近于0.
     params.NoiseCov.setZero();
     params.NoiseCov(0, 0) = noise.linear * t;

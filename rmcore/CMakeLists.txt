@@ -144,6 +144,11 @@ add_library(${PROJECT_NAME}_libgpio STATIC
 add_library(${PROJECT_NAME}_librosmotor STATIC
   src/ros_motor.cpp
 )
+add_library(${PROJECT_NAME}_libcore STATIC
+    src/ros_controller.cpp
+    src/kf.cpp
+    src/control_scheduler.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -156,12 +161,8 @@ add_library(${PROJECT_NAME}_librosmotor STATIC
 add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
-add_executable(${PROJECT_NAME}_driver_node
-    src/driver_node.cpp
-    src/ros_controller.cpp
-    src/kf.cpp
-    src/control_scheduler.cpp
-)
+add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
+add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,6 +171,7 @@ add_executable(${PROJECT_NAME}_driver_node
 set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_offset PREFIX "")
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
 set_target_properties(${PROJECT_NAME}_experiment_tools PROPERTIES OUTPUT_NAME experiment_tools PREFIX "")
+set_target_properties(${PROJECT_NAME}_derivative_test PROPERTIES OUTPUT_NAME derivative_test PREFIX "")
 set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable
@@ -188,9 +190,16 @@ target_link_libraries(${PROJECT_NAME}_experiment_tools
   ${PROJECT_NAME}_librosimu
   ${PROJECT_NAME}_librosmotor
 )
+target_link_libraries(${PROJECT_NAME}_derivative_test
+  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}_libcore
+)
 target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}
-  ${PROJECT_NAME}_libimu
+  ${PROJECT_NAME}_libcore
+)
+target_link_libraries(${PROJECT_NAME}_libcore
+  ${catkin_LIBRARIES}
   ${PROJECT_NAME}_librosencoder
   ${PROJECT_NAME}_librosimu
   ${PROJECT_NAME}_librosmotor

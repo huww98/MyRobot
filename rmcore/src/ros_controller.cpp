@@ -125,7 +125,7 @@ auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double
         1, inertiaFactor;
 
     auto leftPredictedTouque = leftController->PredictTouque(leftV, cmd.leftVoltage);
-    auto rightPredictedTouque = leftController->PredictTouque(rightV, cmd.rightVoltage);
+    auto rightPredictedTouque = rightController->PredictTouque(rightV, cmd.rightVoltage);
 
     PredictedAcceleration a;
     a.linear = (leftPredictedTouque.Touque + rightPredictedTouque.Touque) / 2;

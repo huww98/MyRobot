@@ -1,0 +1,19 @@
+<launch>
+    <param name="baseWidth" value="0.131" />
+    <param name="inertia" value="0.54" />
+    <param name="batteryVoltage" value="7.76"/>
+    <node pkg="rmcore" type="derivative_test" name="derivative_test" required="true">
+        <rosparam ns="leftController">
+            velocityList: [0, 0, 0.0799502, 0.23266, 0.344109, 0.473781, 0.602644, 0.73813, 0.875955, 1.00699, 1.1404]
+            voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
+            touqueVoltageMutiplier: 1.33
+        </rosparam>
+        <rosparam ns="rightController">
+            velocityList: [0, 0, 0.109535, 0.220684, 0.353026, 0.466657, 0.585258, 0.710991, 0.850519, 0.980354, 1.11749]
+            voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
+            touqueVoltageMutiplier: 1.13
+        </rosparam>
+        <param name="leftMotor/device" value="/dev/gpiopwm/18"/>
+        <param name="rightMotor/device" value="/dev/gpiopwm/13"/>
+    </node>
+</launch>
