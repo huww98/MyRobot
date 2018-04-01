@@ -1,0 +1,32 @@
+{
+    // 使用 IntelliSense 了解相关属性。
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to pi",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "/home/huww/catkin_ws/devel/lib/rmcore/derivative_test",
+            "processId": "${command:pickRemoteProcess}",
+            "MIMode": "gdb",
+            "pipeTransport": {
+                "debuggerPath": "/usr/bin/gdb",
+                "pipeProgram": "C:\\Program Files\\PuTTY\\plink.exe",
+                "pipeArgs": ["pi"],
+                "pipeCwd": ""
+            },
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/home/huww/catkin_ws/src/rmcore": "${workspaceRoot}\\rmcore"
+            }
+        },
+    ]
+}

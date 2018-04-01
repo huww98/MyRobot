@@ -24,7 +24,7 @@ class Step
     using TimePointType = std::chrono::steady_clock::time_point;
     using DurationType = std::chrono::steady_clock::duration;
     using StateType = StateT;
-    static_assert(std::is_base_of_v<State<stateCount>, StateType>, "StateType must be a descendant of State<stateCount>");
+    static_assert(std::is_base_of<State<stateCount>, StateType>::value, "StateType must be a descendant of State<stateCount>");
 
     Step(TimePointType time) : time(time) {}
 
@@ -60,11 +60,11 @@ class Predictor
 
     virtual StateType Predict(const StateType &initialState, DurationType duration)
     {
-        auto[nextStateVec, F, noiseCov] = this->GetParameters(initialState, duration);
+        auto params = this->GetParameters(initialState, duration);
 
         StateType nextState;
-        nextState.State = nextStateVec;
-        nextState.Covariance = F * initialState.Covariance * F.transpose() + noiseCov;
+        nextState.State = params.NextStateVec;
+        nextState.Covariance = params.F * initialState.Covariance * params.F.transpose() + params.NoiseCov;
         return nextState;
     }
 
@@ -126,7 +126,10 @@ class Updater : public UpdaterBase<stateCount, StateType>
 
     virtual StateType Update(const StateType &predictedState) override
     {
-        auto[innovation, H, noiseCov] = GetParameters(predictedState);
+        auto params = GetParameters(predictedState);
+        auto &noiseCov = params.NoiseCov;
+        auto &H = params.H;
+        auto &innovation = params.Innovation;
         StateType nextState;
 
         typename UpdateParameters::NoiseCovType innovationCov = noiseCov + H * predictedState.Covariance * H.transpose();

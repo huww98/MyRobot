@@ -107,25 +107,25 @@ auto RosDiffrentalController::calcWheelVelocity(double Velocity, double AngularV
 
 void RosDiffrentalController::IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration)
 {
-    auto[leftV, rightV] = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+    auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);
 
     double leftA = acceleration - angularAcceleration * inertiaFactor;
     double rightA = acceleration + angularAcceleration * inertiaFactor;
 
-    leftController->IssueCommand(leftV, leftA);
-    rightController->IssueCommand(rightV, rightA);
+    leftController->IssueCommand(v.left, leftA);
+    rightController->IssueCommand(v.right, rightA);
 }
 
 auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlCommand cmd)
     -> PredictedAcceleration
 {
-    auto[leftV, rightV] = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+    auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);
     Eigen::Matrix2d j;
     j << 1, -inertiaFactor,
         1, inertiaFactor;
 
-    auto leftPredictedTouque = leftController->PredictTouque(leftV, cmd.leftVoltage);
-    auto rightPredictedTouque = rightController->PredictTouque(rightV, cmd.rightVoltage);
+    auto leftPredictedTouque = leftController->PredictTouque(v.left, cmd.leftVoltage);
+    auto rightPredictedTouque = rightController->PredictTouque(v.right, cmd.rightVoltage);
 
     PredictedAcceleration a;
     a.linear = (leftPredictedTouque.Touque + rightPredictedTouque.Touque) / 2;

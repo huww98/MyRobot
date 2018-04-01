@@ -74,9 +74,9 @@ class EncoderUpdater : public kf::LinearUpdater<KalmanFilter::StateCount, 1, Kal
 {
   private:
     using Base = kf::LinearUpdater<KalmanFilter::StateCount, 1, KalmanFilter::StateType>;
+    static UpdateParameters::HType H;
 
   public:
-    static UpdateParameters::HType H; // declare as public to workaround VSCode bug.
     EncoderUpdater(const encoder::Data &data);
     friend void InitEncoderUpdater(double baseWidth);
 };

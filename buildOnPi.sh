@@ -9,7 +9,7 @@ piHostName="huww-pi"
 echo syncing code to $piHostName
 rsync -rtz --delete ./rmcore/ $piHostName:~/catkin_ws/src/rmcore/
 
-ssh $piHostName 'CLICOLOR_FORCE=1 catkin_make -j2 --directory ~/catkin_ws -DCMAKE_C_COMPILER="gcc-7" -DCMAKE_CXX_COMPILER="g++-7" --only-pkg-with-deps rmcore' || {
+ssh $piHostName 'CLICOLOR_FORCE=1 catkin_make -j2 --directory ~/catkin_ws -DCMAKE_BUILD_TYPE=Debug --only-pkg-with-deps rmcore' || {
     echo -e "${RED}build failed${NC}"
     exit 1
 }

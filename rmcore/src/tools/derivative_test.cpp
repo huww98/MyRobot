@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <chrono>
+#include <thread>
 #include "../kf.h"
 #include "../ros_controller.h"
 
@@ -39,9 +40,10 @@ int main(int argc, char **argv)
     cout << predictedA.jacobianOfVelocity << endl << endl;
 
     auto duration = 10ms;
-    auto[nextStateVec, F, noiseCov] = predictor.GetParameters(state, duration);
-    cout << nextStateVec << endl;
-    cout << F << endl << endl;
+    auto params = predictor.GetParameters(state, duration);
+    cout << params.NextStateVec << endl;
+    cout << params.F << endl
+         << endl;
 
     const double delta = 1e-9;
     const double scalar = 1 / (2 * delta);
@@ -50,13 +52,13 @@ int main(int argc, char **argv)
     {
         auto addedState = state;
         addedState.State(i) += delta;
-        auto[addedNextStateVec, _1, _2] = predictor.GetParameters(addedState, duration);
+        auto addedParams = predictor.GetParameters(addedState, duration);
 
         auto substractedState = state;
         substractedState.State(i) -= delta;
-        auto[substractedNextStateVec, _3, _4] = predictor.GetParameters(substractedState, duration);
+        auto substractedParams = predictor.GetParameters(substractedState, duration);
 
-        auto deltaState = addedNextStateVec - substractedNextStateVec;
+        auto deltaState = addedParams.NextStateVec - substractedParams.NextStateVec;
         computedF.col(i) = scalar * deltaState;
     }
     cout << computedF << endl;
