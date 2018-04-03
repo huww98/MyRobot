@@ -44,7 +44,7 @@ void KalmanFilter::UpdateImu(const imu::Data &data)
     Base::Update<imuUpdateLine>(data.time, make_unique<ImuUpdater>(data));
 }
 
-Predictor::Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)
+Predictor::Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)
     : cmd(cmd), controller(controller), noise(noise)
 {
 }

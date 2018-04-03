@@ -54,13 +54,14 @@ double RosController::calcMaintainSpeedVoltage(double velocity)
 }
 
 // 力矩单位定义：在直线行驶使，两个轮子各输出一个单位力矩，可使小车获得1m/s^2的加速度。
-void RosController::IssueCommand(double currentVelocity, double expectedTouque)
+double RosController::IssueCommand(double currentVelocity, double expectedTouque)
 {
     double maintainSpeedVoltage = calcMaintainSpeedVoltage(currentVelocity);
 
     double touqueVoltage = expectedTouque * touqueVoltageMutiplier;
     double v = maintainSpeedVoltage + touqueVoltage;
     motor->command(v);
+    return v;
 }
 
 auto RosController::PredictTouque(double currentVelocity, double voltage) -> PredictedTouque
@@ -105,18 +106,20 @@ auto RosDiffrentalController::calcWheelVelocity(double Velocity, double AngularV
     return WheelVelocity{leftV, rightV};
 }
 
-void RosDiffrentalController::IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration)
+ControlVoltage RosDiffrentalController::IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration)
 {
     auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);
 
     double leftA = acceleration - angularAcceleration * inertiaFactor;
     double rightA = acceleration + angularAcceleration * inertiaFactor;
 
-    leftController->IssueCommand(v.left, leftA);
-    rightController->IssueCommand(v.right, rightA);
+    ControlVoltage voltage;
+    voltage.leftVoltage = leftController->IssueCommand(v.left, leftA);
+    voltage.rightVoltage = rightController->IssueCommand(v.right, rightA);
+    return voltage;
 }
 
-auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlCommand cmd)
+auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlVoltage cmd)
     -> PredictedAcceleration
 {
     auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);

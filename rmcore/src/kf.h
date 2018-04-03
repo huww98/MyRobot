@@ -5,22 +5,7 @@
 #include "ros_encoder_data.h"
 #include "ros_imu_data.h"
 #include "ros_controller.h"
-
-class RobotState : public kf::State<5>
-{
-  public:
-    double &Velocity() { return this->State(0); }
-    double Velocity() const { return this->State(0); }
-
-    double &AngularVelocity() { return this->State(1); };
-    double AngularVelocity() const { return this->State(1); };
-
-    double &Angle() { return this->State(4); }
-    double Angle() const { return this->State(4); }
-
-    auto Position() { return this->State.segment<2>(2); }
-    auto Position() const { return this->State.segment<2>(2); }
-};
+#include "common_types.h"
 
 struct ControlNoise
 {
@@ -48,7 +33,7 @@ class KalmanFilter : public kf::KalmanFilter<5, 4, RobotState>
 
 struct ControlParameters
 {
-    ControlCommand command;
+    ControlVoltage command;
     ControlNoise noise;
     KalmanFilter::TimePointType time;
 };
@@ -57,13 +42,13 @@ class Predictor : public KalmanFilter::PredictorType
 {
   private:
     using Base = KalmanFilter::PredictorType;
-    ControlCommand cmd;
+    ControlVoltage cmd;
     ControlNoise noise;
     DurationType duration;
     RosDiffrentalController controller;
 
   public:
-    Predictor(const ControlCommand &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
+    Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
     virtual PredictParameters GetParameters(const StateType &initialState, DurationType duration) override;
 };
 

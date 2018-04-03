@@ -20,7 +20,8 @@ class RosController
     };
 
     RosController(ros::NodeHandle nh, std::string name, RosMotor &motor);
-    void IssueCommand(double currentVelocity, double expectedTouque);
+    // return voltage.
+    double IssueCommand(double currentVelocity, double expectedTouque);
     PredictedTouque PredictTouque(double currentVelocity, double voltage);
 
   private:
@@ -34,7 +35,7 @@ class RosController
     double calcMaintainSpeedVoltage(double velocity);
 };
 
-struct ControlCommand
+struct ControlVoltage
 {
     double leftVoltage;
     double rightVoltage;
@@ -52,8 +53,8 @@ class RosDiffrentalController
     };
 
     RosDiffrentalController(ros::NodeHandle nh, RosController &leftController, RosController &rightController);
-    void IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration);
-    PredictedAcceleration PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlCommand cmd);
+    ControlVoltage IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration);
+    PredictedAcceleration PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlVoltage cmd);
 
   private:
     RosController *leftController, *rightController;

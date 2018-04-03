@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.5)
 project(rmcore)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 message(STATUS "c++ compiler: ${CMAKE_CXX_COMPILER}")
 
@@ -16,6 +17,7 @@ add_definitions("-fdiagnostics-color")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslaunch
+  teb_local_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -163,7 +165,7 @@ add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
-add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp)
+add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp src/command_computer.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

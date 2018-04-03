@@ -6,17 +6,10 @@
 #include <list>
 #include <memory>
 
+#include "state.h"
+
 namespace kf
 {
-template <int stateCount>
-struct State
-{
-    using ValueVector = Eigen::Matrix<double, stateCount, 1>;
-    using CovMat = Eigen::Matrix<double, stateCount, stateCount>;
-    ValueVector State;
-    CovMat Covariance;
-};
-
 template <int stateCount, typename StateT = State<stateCount>>
 class Step
 {

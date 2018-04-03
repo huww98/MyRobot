@@ -7,6 +7,13 @@
             "label": "build on pi",
             "type": "shell",
             "command": "bash -c ./buildOnPi.sh",
+            "group": "build",
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "bash -c ./build.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
