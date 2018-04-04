@@ -25,21 +25,9 @@
         },
         {
             "name": "Linux",
-            "includePath": [
-                "/usr/include/c++/5",
-                "/usr/include/x86_64-linux-gnu/c++/5",
-                "/usr/include/c++/5/backward",
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include",
-                "/usr/local/include",
-                "/usr/local/include/eigen3",
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed",
-                "/usr/include/x86_64-linux-gnu",
-                "/usr/include",
-                "/opt/ros/kinetic/include",
-                "${workspaceRoot}"
-            ],
-            "defines": [],
+            "compileCommands": "/home/huww/catkin_ws/build/compile_commands.json",
             "intelliSenseMode": "clang-x64",
+            "compilerPath": "/usr/bin/c++",
             "browse": {
                 "path": [
                     "/usr/include/c++/5",
@@ -55,7 +43,9 @@
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++14"
         },
         {
             "name": "Win32",
@@ -80,7 +70,7 @@
                 "__linux__",
                 "__x86_64__",
                 "__SIZE_TYPE__=long unsigned int",
-                "__GNUC__=7"
+                "__GNUC__=5"
             ],
             "intelliSenseMode": "clang-x64",
             "browse": {
