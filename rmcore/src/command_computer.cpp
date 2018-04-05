@@ -4,6 +4,17 @@ using namespace teb_local_planner;
 using namespace std;
 using namespace Eigen;
 
+RobotState CommandComputer::GetInitialState()
+{
+    RobotState state;
+    state.Velocity() = 0;
+    state.AngularVelocity() = 0;
+    auto &firstPose = allSegments[0].InitialPlanPoses[0];
+    state.Position() = firstPose.position();
+    state.Angle() = firstPose.theta();
+    return state;
+}
+
 CommandComputer::CommandComputer(ros::NodeHandle nh)
 {
     loadConfig(nh);

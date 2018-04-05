@@ -24,7 +24,7 @@ class KalmanFilter : public kf::KalmanFilter<5, 4, RobotState>
     void UpdateEncoder(const encoder::Data &data);
 
   public:
-    KalmanFilter(double baseWidth, RosDiffrentalController &controller);
+    KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState);
     void Predict(const ControlParameters &parameters);
     void UpdateLeftEncoder(const encoder::Data &data) { UpdateEncoder<0>(data); }
     void UpdateRightEncoder(const encoder::Data &data) { UpdateEncoder<1>(data); }

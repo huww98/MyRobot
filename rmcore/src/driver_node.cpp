@@ -39,7 +39,10 @@ int main(int argc, char **argv)
 
     RosDiffrentalController controller(ros::NodeHandle("~diffrentialController"), leftController, rightController);
 
-    StateManager stateManager(baseWidth, controller);
+    CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
+    RemoteController remoteController(ros::NodeHandle("~remoteController"));
+
+    StateManager stateManager(baseWidth, controller, cmdComputer.GetInitialState());
     auto imuUpdated = [&stateManager](imu::Data d) { stateManager.UpdateImu(d); };
     auto leftVelocityUpdated = [&stateManager](encoder::Data d) { stateManager.UpdateLeftEncoder(d); };
     auto rightVelocityUpdated = [&stateManager](encoder::Data d) { stateManager.UpdateRightEncoder(d); };
@@ -47,9 +50,6 @@ int main(int argc, char **argv)
     RosImu imu(imuUpdated, ros::NodeHandle("~imu"));
     RosEncoder leftEncoder(leftVelocityUpdated, ros::NodeHandle("~leftEncoder"), "leftEncoder");
     RosEncoder rightEncoder(rightVelocityUpdated, ros::NodeHandle("~rightEncoder"), "rightEncoder");
-
-    CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
-    RemoteController remoteController(ros::NodeHandle("~remoteController"));
 
     while (ros::ok())
     {

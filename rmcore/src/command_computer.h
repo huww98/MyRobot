@@ -17,6 +17,7 @@ class CommandComputer
     CommandComputer(ros::NodeHandle nh);
 
     AccelerationCommand ComputeCommand(const RobotState &state);
+    RobotState GetInitialState();
 
   private:
     void loadSegments();

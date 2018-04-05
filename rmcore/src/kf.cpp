@@ -9,16 +9,16 @@ class InitialStep : public KalmanFilter::StepType
     using Base = KalmanFilter::StepType;
 
   public:
-    InitialStep():Base(Base::TimePointType::min())
+    InitialStep(const RobotState &initState):Base(Base::TimePointType::min())
     {
-        this->finishedState = RobotState();
+        this->finishedState = initState;
     }
 
     virtual const StateType &Run(const StateType &initialState) override final {};
 };
 
-KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller)
-    : controller(&controller), Base(make_unique<InitialStep>())
+KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
+    : controller(&controller), Base(make_unique<InitialStep>(initState))
 {
     InitEncoderUpdater(baseWidth);
 }
