@@ -29,8 +29,7 @@ int main(int argc, char **argv)
     RosDiffrentalController controller(ros::NodeHandle("~diffrentialController"), leftController, rightController);
 
     ControlVoltage cmd{3.8, 3.9};
-    ControlNoise noise;
-    Predictor predictor(cmd, controller, noise);
+    Predictor predictor(cmd, controller);
 
     RobotState state;
     state.State << 0.7, 0.02, 1.0, 1.0, 0.1;

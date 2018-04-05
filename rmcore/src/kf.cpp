@@ -25,7 +25,7 @@ KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller
 
 void KalmanFilter::Predict(const ControlParameters &parameters)
 {
-    Base::Predict(parameters.time, make_shared<Predictor>(parameters.command, *controller, parameters.noise));
+    Base::Predict(parameters.time, make_shared<Predictor>(parameters.command, *controller));
 }
 
 constexpr int encoderUpdateLineOffset = 0, imuUpdateLine = 2;
@@ -44,8 +44,8 @@ void KalmanFilter::UpdateImu(const imu::Data &data)
     Base::Update<imuUpdateLine>(data.time, make_unique<ImuUpdater>(data));
 }
 
-Predictor::Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller, const ControlNoise &noise)
-    : cmd(cmd), controller(controller), noise(noise)
+Predictor::Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller)
+    : cmd(cmd), controller(controller)
 {
 }
 
@@ -76,9 +76,7 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
     // 其协方差与时间成正比，且方差和协方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的
     // 方差保持在一个值。既不会无限增大，也不会趋近于0.
     params.NoiseCov.setZero();
-    params.NoiseCov(0, 0) = noise.linear * t;
-    params.NoiseCov(1, 1) = noise.angular * t;
-
+    params.NoiseCov.block<2,2>(0,0) = predictedA.Covariance * t;
     return params;
 }
 

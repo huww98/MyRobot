@@ -71,7 +71,6 @@ int main(int argc, char **argv)
         ControlParameters params;
         params.command = v;
         params.time = steady_clock::now();
-        // todo: noise
         stateManager.UpdateControl(params);
     }
 

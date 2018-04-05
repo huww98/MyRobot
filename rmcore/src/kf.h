@@ -7,12 +7,6 @@
 #include "ros_controller.h"
 #include "common_types.h"
 
-struct ControlNoise
-{
-    double linear;
-    double angular;
-};
-
 struct ControlParameters;
 
 class KalmanFilter : public kf::KalmanFilter<5, 4, RobotState>
@@ -34,7 +28,6 @@ class KalmanFilter : public kf::KalmanFilter<5, 4, RobotState>
 struct ControlParameters
 {
     ControlVoltage command;
-    ControlNoise noise;
     KalmanFilter::TimePointType time;
 };
 
@@ -43,12 +36,11 @@ class Predictor : public KalmanFilter::PredictorType
   private:
     using Base = KalmanFilter::PredictorType;
     ControlVoltage cmd;
-    ControlNoise noise;
     DurationType duration;
     RosDiffrentalController controller;
 
   public:
-    Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller, const ControlNoise &noise);
+    Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller);
     virtual PredictParameters GetParameters(const StateType &initialState, DurationType duration) override;
 };
 
