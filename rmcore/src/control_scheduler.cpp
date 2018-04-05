@@ -1,3 +1,4 @@
+#include <thread>
 #include "control_scheduler.h"
 
 using namespace std;
@@ -5,27 +6,31 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 ControlScheduler::ControlScheduler(double frequency)
-    : expectedInterval(duration_cast<Duration>(1s / frequency)),
+    : expectedInterval(duration_cast<DurationType>(1s / frequency)),
       lastControlTime(steady_clock::now()),
-      scheduledTime(lastControlTime + expectedInterval),
-      skippedControlStep(0)
+      scheduledTime(lastControlTime + expectedInterval)
 {
 }
 
-void ControlScheduler::UpdateSchedule()
+void ControlScheduler::UpdateScheduledTime()
 {
-    while (scheduledTime + expectedInterval < steady_clock::now())
+    auto now = steady_clock::now();
+    if(scheduledTime > now || scheduledTime + expectedInterval < now)
+        scheduledTime = now;
+
+    scheduledTime += expectedInterval;
+}
+
+bool ControlScheduler::SleepToScheduledTime()
+{
+    auto now = steady_clock::now();
+    if(scheduledTime < now)
     {
-        scheduledTime += expectedInterval;
-        skippedControlStep++;
+        UpdateScheduledTime();
+        return false;
     }
-}
 
-int ControlScheduler::DoControl()
-{
-    this->UpdateSchedule();
-    int skippedStep = this->skippedControlStep;
-    this->skippedControlStep = 0;
-    lastControlTime = scheduledTime;
-    scheduledTime = lastControlTime + expectedInterval;
+    this_thread::sleep_until(scheduledTime);
+    UpdateScheduledTime();
+    return true;
 }

@@ -8,7 +8,9 @@
 #include "spsc_bounded_queue.h"
 #include "state_manager.h"
 #include "kf.h"
+#include "command_computer.h"
 #include "control_scheduler.h"
+#include "remote_controller.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -46,11 +48,31 @@ int main(int argc, char **argv)
     RosEncoder leftEncoder(leftVelocityUpdated, ros::NodeHandle("~leftEncoder"), "leftEncoder");
     RosEncoder rightEncoder(rightVelocityUpdated, ros::NodeHandle("~rightEncoder"), "rightEncoder");
 
+    CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
+    RemoteController remoteController(ros::NodeHandle("~remoteController"));
+
     while (ros::ok())
     {
-        scheduler.UpdateSchedule();
-        int skippedStep = scheduler.DoControl();
-        ROS_WARN_COND(skippedStep > 0, "Skipped %d control command, maybe overloaded.", skippedStep);
+        auto time = scheduler.GetScheduledTime();
+        auto nextState = stateManager.GetPredictedState(time);
+        auto cmd = cmdComputer.ComputeCommand(nextState);
+        scheduler.SleepToScheduledTime();
+
+        ControlVoltage v;
+        if(remoteController.Running())
+            v = controller.IssueCommand(nextState, cmd);
+        else
+        {
+            leftMotor.command(0.0);
+            rightMotor.command(0.0);
+            v.leftVoltage = 0.0;
+            v.rightVoltage = 0.0;
+        }
+        ControlParameters params;
+        params.command = v;
+        params.time = steady_clock::now();
+        // todo: noise
+        stateManager.UpdateControl(params);
     }
 
     imu.close();

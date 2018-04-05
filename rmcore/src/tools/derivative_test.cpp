@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     RobotState state;
     state.State << 0.7, 0.02, 1.0, 1.0, 0.1;
 
-    auto predictedA = controller.PredictAcceleration(state.Velocity(), state.AngularVelocity(), cmd);
+    auto predictedA = controller.PredictAcceleration(state, cmd);
     cout << predictedA.linear << ", " << predictedA.angular << endl << endl;
     cout << predictedA.jacobianOfVelocity << endl << endl;
 

@@ -166,7 +166,11 @@ add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.c
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
 add_executable(${PROJECT_NAME}_plan src/tools/plan.cpp)
-add_executable(${PROJECT_NAME}_driver_node src/driver_node.cpp src/command_computer.cpp)
+add_executable(${PROJECT_NAME}_driver_node
+    src/driver_node.cpp
+    src/command_computer.cpp
+    src/remote_controller.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

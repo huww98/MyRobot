@@ -47,24 +47,31 @@ void StateManager::insertWorker()
                 break;
             hasNewData = false;
         }
+
+        encoder::Data eData;
+        imu::Data iData;
+        while (leftEncoderQueue.dequeue(eData))
         {
             lock_guard<mutex> lk(insertMutex);
-            encoder::Data eData;
-            imu::Data iData;
-            while (leftEncoderQueue.dequeue(eData))
-            {
-                kf.UpdateLeftEncoder(eData);
-            }
-            while (rightEncoderQueue.dequeue(eData))
-            {
-                kf.UpdateRightEncoder(eData);
-            }
-            while (imuQueue.dequeue(iData))
-            {
-                kf.UpdateImu(iData);
-            }
+            kf.UpdateLeftEncoder(eData);
+        }
+        while (rightEncoderQueue.dequeue(eData))
+        {
+            lock_guard<mutex> lk(insertMutex);
+            kf.UpdateRightEncoder(eData);
+        }
+        while (imuQueue.dequeue(iData))
+        {
+            lock_guard<mutex> lk(insertMutex);
+            kf.UpdateImu(iData);
         }
     }
+}
+
+void StateManager::UpdateControl(const ControlParameters &params)
+{
+    lock_guard<mutex> lk(insertMutex);
+    kf.Predict(params);
 }
 
 const RobotState &StateManager::GetPredictedState(KalmanFilter::TimePointType time)

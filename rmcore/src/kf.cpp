@@ -53,7 +53,7 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
 {
     double t = duration_cast<chrono::duration<double>>(duration).count();
 
-    auto predictedA = controller.PredictAcceleration(initialState.Velocity(), initialState.AngularVelocity(), cmd);
+    auto predictedA = controller.PredictAcceleration(initialState, cmd);
     PredictParameters params;
     double v = initialState.Velocity() + predictedA.linear * t;
     double omega = initialState.AngularVelocity() + predictedA.angular * t;

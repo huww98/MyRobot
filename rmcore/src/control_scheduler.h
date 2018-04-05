@@ -3,17 +3,17 @@
 class ControlScheduler
 {
   public:
-    using Duration = std::chrono::steady_clock::duration;
-    using TimePoint = std::chrono::steady_clock::time_point;
+    using DurationType = std::chrono::steady_clock::duration;
+    using TimePointType = std::chrono::steady_clock::time_point;
 
     ControlScheduler(double frequency);
-    TimePoint GetScheduledTime() const { return scheduledTime; }
-    int DoControl();
-    void UpdateSchedule();
+    TimePointType GetScheduledTime() const { return scheduledTime; }
+    bool SleepToScheduledTime();
 
   private:
-    const Duration expectedInterval;
-    TimePoint lastControlTime;
-    TimePoint scheduledTime;
-    int skippedControlStep;
+    void UpdateScheduledTime();
+
+    const DurationType expectedInterval;
+    TimePointType lastControlTime;
+    TimePointType scheduledTime;
 };

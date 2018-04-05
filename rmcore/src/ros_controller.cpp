@@ -99,19 +99,19 @@ RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, RosControll
     this->inertiaFactor = inertia * baseWidth / 2;
 }
 
-auto RosDiffrentalController::calcWheelVelocity(double Velocity, double AngularVelocity) -> WheelVelocity
+auto RosDiffrentalController::calcWheelVelocity(const RobotState &state) -> WheelVelocity
 {
-    double leftV = Velocity - inertiaFactor * AngularVelocity;
-    double rightV = Velocity + inertiaFactor * AngularVelocity;
+    double leftV = state.Velocity() - baseWidth / 2 * state.AngularVelocity();
+    double rightV = state.Velocity() + baseWidth / 2 * state.AngularVelocity();
     return WheelVelocity{leftV, rightV};
 }
 
-ControlVoltage RosDiffrentalController::IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration)
+ControlVoltage RosDiffrentalController::IssueCommand(const RobotState &state, AccelerationCommand accel)
 {
-    auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+    auto v = calcWheelVelocity(state);
 
-    double leftA = acceleration - angularAcceleration * inertiaFactor;
-    double rightA = acceleration + angularAcceleration * inertiaFactor;
+    double leftA = accel.linear - accel.angular * inertiaFactor;
+    double rightA = accel.linear + accel.angular * inertiaFactor;
 
     ControlVoltage voltage;
     voltage.leftVoltage = leftController->IssueCommand(v.left, leftA);
@@ -119,13 +119,13 @@ ControlVoltage RosDiffrentalController::IssueCommand(double currentVelocity, dou
     return voltage;
 }
 
-auto RosDiffrentalController::PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlVoltage cmd)
+auto RosDiffrentalController::PredictAcceleration(const RobotState &state, ControlVoltage cmd)
     -> PredictedAcceleration
 {
-    auto v = calcWheelVelocity(currentVelocity, currentAngularVelocity);
+    auto v = calcWheelVelocity(state);
     Eigen::Matrix2d j;
-    j << 1, -inertiaFactor,
-        1, inertiaFactor;
+    j << 1, -baseWidth / 2,
+        1, baseWidth / 2;
 
     auto leftPredictedTouque = leftController->PredictTouque(v.left, cmd.leftVoltage);
     auto rightPredictedTouque = rightController->PredictTouque(v.right, cmd.rightVoltage);

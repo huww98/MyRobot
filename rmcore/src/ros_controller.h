@@ -8,6 +8,7 @@
 #include <Eigen/Dense>
 #include "ros_motor.h"
 #include "utillities/linear_interpolation.h"
+#include "common_types.h"
 
 class RosController
 {
@@ -53,8 +54,8 @@ class RosDiffrentalController
     };
 
     RosDiffrentalController(ros::NodeHandle nh, RosController &leftController, RosController &rightController);
-    ControlVoltage IssueCommand(double currentVelocity, double currentAngularVelocity, double acceleration, double angularAcceleration);
-    PredictedAcceleration PredictAcceleration(double currentVelocity, double currentAngularVelocity, ControlVoltage cmd);
+    ControlVoltage IssueCommand(const RobotState &state, AccelerationCommand accel);
+    PredictedAcceleration PredictAcceleration(const RobotState &state, ControlVoltage cmd);
 
   private:
     RosController *leftController, *rightController;
@@ -66,7 +67,7 @@ class RosDiffrentalController
         double left;
         double right;
     };
-    WheelVelocity calcWheelVelocity(double Velocity, double AngularVelocity);
+    WheelVelocity calcWheelVelocity(const RobotState &state);
 };
 
 #endif

@@ -29,6 +29,7 @@ class StateManager
     void UpdateLeftEncoder(const encoder::Data &data);
     void UpdateRightEncoder(const encoder::Data &data);
     void UpdateImu(const imu::Data &data);
+    void UpdateControl(const ControlParameters &params);
     const RobotState &GetPredictedState(KalmanFilter::TimePointType time);
     ~StateManager();
 };
