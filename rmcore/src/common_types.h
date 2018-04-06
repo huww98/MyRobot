@@ -17,12 +17,20 @@ class RobotState : public kf::State<5>
 
     auto Position() { return this->State.segment<2>(2); }
     auto Position() const { return this->State.segment<2>(2); }
+
+    auto V() { return this->State.segment<2>(0); }
+    auto V() const { return this->State.segment<2>(0); }
 };
 
 struct AccelerationCommand
 {
-    double linear;
-    double angular;
+    Eigen::Vector2d vec;
+
+    double &linear() {return vec(0);}
+    double linear() const {return vec(0);}
+
+    double &angular() {return vec(1);}
+    double angular() const {return vec(1);}
 };
 
 #endif

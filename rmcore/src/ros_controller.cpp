@@ -2,6 +2,7 @@
 #include "ros_controller.h"
 
 using namespace std;
+using namespace Eigen;
 
 auto logName = "controller";
 
@@ -97,25 +98,28 @@ RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, RosControll
     double inertia;
     nh.getParam(key, inertia);
     this->inertiaFactor = inertia * baseWidth / 2;
+    this->v2wv << 1, -baseWidth / 2,
+                  1, baseWidth / 2;
+    this->a2wt << 1, -inertiaFactor,
+                  1, inertiaFactor;
+    this->wt2a = a2wt.inverse();
 }
 
 auto RosDiffrentalController::calcWheelVelocity(const RobotState &state) -> WheelVelocity
 {
-    double leftV = state.Velocity() - baseWidth / 2 * state.AngularVelocity();
-    double rightV = state.Velocity() + baseWidth / 2 * state.AngularVelocity();
-    return WheelVelocity{leftV, rightV};
+    Vector2d wv = v2wv * state.V();
+    return WheelVelocity{wv(0), wv(1)};
 }
 
 ControlVoltage RosDiffrentalController::IssueCommand(const RobotState &state, AccelerationCommand accel)
 {
     auto v = calcWheelVelocity(state);
 
-    double leftA = accel.linear - accel.angular * inertiaFactor;
-    double rightA = accel.linear + accel.angular * inertiaFactor;
+    Vector2d wt = a2wt * accel.vec;
 
     ControlVoltage voltage;
-    voltage.leftVoltage = leftController->IssueCommand(v.left, leftA);
-    voltage.rightVoltage = rightController->IssueCommand(v.right, rightA);
+    voltage.leftVoltage = leftController->IssueCommand(v.left, wt(0));
+    voltage.rightVoltage = rightController->IssueCommand(v.right, wt(1));
     return voltage;
 }
 
@@ -123,21 +127,17 @@ auto RosDiffrentalController::PredictAcceleration(const RobotState &state, Contr
     -> PredictedAcceleration
 {
     auto v = calcWheelVelocity(state);
-    Eigen::Matrix2d j;
-    j << 1, -baseWidth / 2,
-        1, baseWidth / 2;
 
     auto leftPredictedTouque = leftController->PredictTouque(v.left, cmd.leftVoltage);
     auto rightPredictedTouque = rightController->PredictTouque(v.right, cmd.rightVoltage);
 
+    Vector2d wt(leftPredictedTouque.Touque, rightPredictedTouque.Touque);
     PredictedAcceleration a;
-    a.linear = (leftPredictedTouque.Touque + rightPredictedTouque.Touque) / 2;
-    a.angular = (rightPredictedTouque.Touque - leftPredictedTouque.Touque) / 2 / inertiaFactor;
-    // 先对轮子的速度求导
-    a.jacobianOfVelocity(0, 0) = leftPredictedTouque.DerivativeOfVelocity / 2;
-    a.jacobianOfVelocity(0, 1) = rightPredictedTouque.DerivativeOfVelocity / 2;
-    a.jacobianOfVelocity(1, 0) = -a.jacobianOfVelocity(0, 0) / inertiaFactor;
-    a.jacobianOfVelocity(1, 1) = a.jacobianOfVelocity(0, 1) / inertiaFactor;
-    a.jacobianOfVelocity *= j;
+    a.accel.vec = wt2a * wt;
+    DiagonalMatrix<double, 2> wv2wt(leftPredictedTouque.DerivativeOfVelocity, rightPredictedTouque.DerivativeOfVelocity);
+    a.jacobianOfVelocity = wt2a * wv2wt * v2wv;
+
+    DiagonalMatrix<double, 2> wtCov(leftPredictedTouque.Variance, rightPredictedTouque.Variance);
+    a.Covariance = wt2a * wtCov * wt2a.transpose();
     return a;
 }

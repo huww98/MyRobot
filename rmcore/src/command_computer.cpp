@@ -41,8 +41,8 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state)
     double vx, vy, omega;
     planner.getVelocityCommand(vx, vy, omega);
     double dt = planner.teb().TimeDiff(0);
-    accel.linear = (vx - startVel.linear.x) * 2 / dt;
-    accel.angular = (omega - startVel.angular.z) * 2 / dt;
+    accel.linear() = (vx - startVel.linear.x) * 2 / dt;
+    accel.angular() = (omega - startVel.angular.z) * 2 / dt;
     return accel;
 }
 

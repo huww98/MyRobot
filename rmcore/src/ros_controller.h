@@ -47,8 +47,7 @@ class RosDiffrentalController
   public:
     struct PredictedAcceleration
     {
-        double linear;
-        double angular;
+        AccelerationCommand accel;
         Eigen::Matrix2d jacobianOfVelocity;
         Eigen::Matrix2d Covariance;
     };
@@ -61,6 +60,9 @@ class RosDiffrentalController
     RosController *leftController, *rightController;
     double baseWidth;
     double inertiaFactor;
+    Eigen::Matrix2d v2wv;
+    Eigen::Matrix2d wt2a;
+    Eigen::Matrix2d a2wt;
 
     struct WheelVelocity
     {

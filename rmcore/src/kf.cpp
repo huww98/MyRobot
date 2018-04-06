@@ -55,8 +55,8 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
 
     auto predictedA = controller.PredictAcceleration(initialState, cmd);
     PredictParameters params;
-    double v = initialState.Velocity() + predictedA.linear * t;
-    double omega = initialState.AngularVelocity() + predictedA.angular * t;
+    double v = initialState.Velocity() + predictedA.accel.linear() * t;
+    double omega = initialState.AngularVelocity() + predictedA.accel.angular() * t;
     double meanV = (initialState.Velocity() + v) / 2;
     double meanOmega = (initialState.AngularVelocity() + omega) / 2;
     double deltaTheta = meanOmega * t;

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     state.State << 0.7, 0.02, 1.0, 1.0, 0.1;
 
     auto predictedA = controller.PredictAcceleration(state, cmd);
-    cout << predictedA.linear << ", " << predictedA.angular << endl << endl;
+    cout << predictedA.accel.vec << endl << endl;
     cout << predictedA.jacobianOfVelocity << endl << endl;
 
     auto duration = 10ms;
