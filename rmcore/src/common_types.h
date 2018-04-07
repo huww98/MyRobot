@@ -3,7 +3,7 @@
 
 #include "kf/state.h"
 
-class RobotState : public kf::State<5>
+class RobotState : public kf::State<3>
 {
   public:
     double &Velocity() { return this->State(0); }
@@ -12,11 +12,8 @@ class RobotState : public kf::State<5>
     double &AngularVelocity() { return this->State(1); };
     double AngularVelocity() const { return this->State(1); };
 
-    double &Angle() { return this->State(4); }
-    double Angle() const { return this->State(4); }
-
-    auto Position() { return this->State.segment<2>(2); }
-    auto Position() const { return this->State.segment<2>(2); }
+    double &Angle() { return this->State(2); }
+    double Angle() const { return this->State(2); }
 
     auto V() { return this->State.segment<2>(0); }
     auto V() const { return this->State.segment<2>(0); }

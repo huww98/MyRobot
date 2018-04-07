@@ -25,7 +25,7 @@ class StateManager
     void enqueueNewData(SpscBoundedQueue<dataType> &dataQuery, const dataType &data, std::string queryName);
 
   public:
-    StateManager(double baseWidth, RosDiffrentalController &controller, const RobotState &initState);
+    StateManager(double baseWidth, RosDiffrentalController &controller);
     void UpdateLeftEncoder(const encoder::Data &data);
     void UpdateRightEncoder(const encoder::Data &data);
     void UpdateImu(const imu::Data &data);

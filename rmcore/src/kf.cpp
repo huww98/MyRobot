@@ -45,20 +45,11 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
     double alpha = predictedA.accel.angular();
     double v = initialState.Velocity() + a * t;
     double omega = initialState.AngularVelocity() + alpha * t;
-    double meanV = (initialState.Velocity() + v) / 2;
-    double meanOmega = (initialState.AngularVelocity() + omega) / 2;
-    double deltaTheta = meanOmega * t;
-    double theta = initialState.Angle() + deltaTheta;
-    double dist = meanV * t; //approximate
-    double directionAngle = initialState.Angle() + deltaTheta / 2;
-    Eigen::Vector2d dirVec(cos(directionAngle), sin(directionAngle));
-    Eigen::Vector2d dirVecDerivative(-sin(directionAngle), cos(directionAngle));
-    Eigen::Vector2d newPos = initialState.Position() + dirVec * dist;
-    params.NextStateVec << v, omega, newPos, theta;
     double halfTSquare = 0.5 * t * t;
-    params.F << Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t, Eigen::Matrix<double, 2, 3>::Zero(),
-        (t + halfTSquare * predictedA.jacobianOfVelocity(0, 0)) * dirVec, dist * dirVecDerivative * t / 2 + halfTSquare * predictedA.jacobianOfVelocity(0, 1) * dirVec, Eigen::Matrix2d::Identity(), dist * dirVecDerivative,
-        halfTSquare * predictedA.jacobianOfVelocity(1, 0), t + halfTSquare * predictedA.jacobianOfVelocity(1, 1), 0, 0, 1;
+    double theta = initialState.Angle() + halfTSquare * alpha;
+    params.NextStateVec << v, omega, theta;
+    params.F << Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t, 0,
+                halfTSquare * predictedA.jacobianOfVelocity(1, 0), t + halfTSquare * predictedA.jacobianOfVelocity(1, 1), 0;
 
     // 噪音计算是一个近似。方差本应该和时间的平方成正比，但在这个实例中，本次控制与之前的控制结果关系较大，
     // 其协方差与时间成正比，且方差和协方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的
@@ -81,14 +72,14 @@ EncoderUpdater<idx>::EncoderUpdater(const encoder::Data &data)
 
 void InitEncoderUpdater(double baseWidth)
 {
-    EncoderUpdater<0>::H << 1, -baseWidth / 2, 0, 0, 0;
-    EncoderUpdater<1>::H << 1, baseWidth / 2, 0, 0, 0;
+    EncoderUpdater<0>::H << 1, -baseWidth / 2, 0;
+    EncoderUpdater<1>::H << 1, baseWidth / 2, 0;
 }
 
 template class EncoderUpdater<0>;
 template class EncoderUpdater<1>;
 
-ImuUpdater::UpdateParameters::HType ImuUpdater::H = (UpdateParameters::HType() << 0, 1, 0, 0, 0).finished();
+ImuUpdater::UpdateParameters::HType ImuUpdater::H = (UpdateParameters::HType() << 0, 1, 0).finished();
 
 ImuUpdater::ImuUpdater(const imu::Data &data)
 {

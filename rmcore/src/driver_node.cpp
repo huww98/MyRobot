@@ -8,7 +8,6 @@
 #include "spsc_bounded_queue.h"
 #include "state_manager.h"
 #include "kf.h"
-#include "command_computer.h"
 #include "control_scheduler.h"
 #include "remote_controller.h"
 
@@ -49,12 +48,10 @@ int main(int argc, char **argv)
     RosDiffrentalController controller(ros::NodeHandle("~diffrentialController"), leftController, rightController);
     ROS_INFO("DiffrentalController Initialized.");
 
-    CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
-    ROS_INFO("CommandComputer Initialized.");
     RemoteController remoteController(ros::NodeHandle("~remoteController"));
     ROS_INFO("RemoteController Initialized.");
 
-    StateManager stateManager(baseWidth, controller, cmdComputer.GetInitialState());
+    StateManager stateManager(baseWidth, controller);
     auto imuUpdated = [&stateManager](imu::Data d) { stateManager.UpdateImu(d); };
     auto leftVelocityUpdated = [&stateManager](encoder::Data d) { stateManager.UpdateLeftEncoder(d); };
     auto rightVelocityUpdated = [&stateManager](encoder::Data d) { stateManager.UpdateRightEncoder(d); };
@@ -70,12 +67,14 @@ int main(int argc, char **argv)
     {
         auto time = scheduler.GetScheduledTime();
         auto nextState = stateManager.GetPredictedState(time);
-        auto cmd = cmdComputer.ComputeCommand(nextState);
+        // auto cmd = cmdComputer.ComputeCommand(nextState);
         scheduler.SleepToScheduledTime();
 
         ControlVoltage v;
         if(remoteController.Running())
-            v = controller.IssueCommand(nextState, cmd);
+        {
+            // v = controller.IssueCommand(nextState, cmd);
+        }
         else
         {
             leftMotor.command(0.0);

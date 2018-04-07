@@ -17,7 +17,6 @@ add_definitions("-fdiagnostics-color")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslaunch
-  teb_local_planner
 )
 
 ## System dependencies are found with CMake's conventions
@@ -163,10 +162,8 @@ add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
-add_executable(${PROJECT_NAME}_plan src/tools/plan.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
-    src/command_computer.cpp
     src/remote_controller.cpp
 )
 
@@ -178,7 +175,6 @@ set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_of
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
 set_target_properties(${PROJECT_NAME}_experiment_tools PROPERTIES OUTPUT_NAME experiment_tools PREFIX "")
 set_target_properties(${PROJECT_NAME}_derivative_test PROPERTIES OUTPUT_NAME derivative_test PREFIX "")
-set_target_properties(${PROJECT_NAME}_plan PROPERTIES OUTPUT_NAME plan PREFIX "")
 set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable
@@ -200,10 +196,6 @@ target_link_libraries(${PROJECT_NAME}_experiment_tools
 target_link_libraries(${PROJECT_NAME}_derivative_test
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_libcore
-)
-target_link_libraries(${PROJECT_NAME}_plan
-  ${catkin_LIBRARIES}
-  yaml-cpp
 )
 target_link_libraries(${PROJECT_NAME}_driver_node
   ${catkin_LIBRARIES}
