@@ -56,6 +56,8 @@ class RosDiffrentalController
     ControlVoltage IssueCommand(const RobotState &state, AccelerationCommand accel);
     PredictedAcceleration PredictAcceleration(const RobotState &state, ControlVoltage cmd);
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   private:
     RosController *leftController, *rightController;
     double baseWidth;

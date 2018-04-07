@@ -10,6 +10,8 @@ class RosImu: public Imu
     RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle nh);
     void close();
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   private:
     std::function<void(const imu::Data &)> dataReady;
     void dataReadyHandler();
@@ -21,7 +23,7 @@ class RosImu: public Imu
     Eigen::Matrix3d GyroCorrectMat = Eigen::Matrix3d::Identity();
     Eigen::Vector3d GyroOffset = Eigen::Vector3d::Zero();
 
-    double g = 9.8;
+    double variance;
     std::chrono::steady_clock::time_point lastSampleTime;
     std::chrono::steady_clock::duration expectedSampleInterval;
 };

@@ -41,6 +41,11 @@ RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &mot
         ROS_FATAL_NAMED(logName, "%s: touqueVoltageMutiplier parameter must be set.", name.c_str());
         ROS_BREAK();
     }
+    if (!nh.getParam("touqueVariance", touqueVariance))
+    {
+        ROS_FATAL_NAMED(logName, "%s: touqueVariance parameter must be set.", name.c_str());
+        ROS_BREAK();
+    }
 }
 
 double RosController::calcMaintainSpeedVoltage(double velocity, double &k)
@@ -73,6 +78,7 @@ auto RosController::PredictTouque(double currentVelocity, double voltage) -> Pre
     PredictedTouque pred;
     pred.Touque = touqueVoltage / touqueVoltageMutiplier;
     pred.DerivativeOfVelocity = -k / touqueVoltageMutiplier;
+    pred.Variance = touqueVariance;
     return pred;
 }
 

@@ -1,40 +1,8 @@
 <launch>
-    <param name="g" value="9.792" />
-    <param name="baseWidth" value="0.131" />
-    <param name="inertia" value="0.54" />
-    <group ns="encoder">
-        <param name="tickPerMeter" value="97.94" />
-        <param name="minVelocity" value="0.05" />
-    </group>
-    <node pkg="rmcore" type="controller" name="controller" required="true">
-        <rosparam ns="leftEncoder">
-            pin: 10
-            collabrateData: [1.0378, 1.0367, 1.0360, 1.0194, 1.0095, 1.0148, 1.0110, 0.9872, 0.9729, 0.9744, 0.9618, 0.9575, 0.9617, 0.9702, 0.9708, 0.9831, 1.0132, 1.0226, 1.0368, 1.0450]
-        </rosparam>
-        <rosparam ns="rightEncoder">
-            pin: 4
-            collabrateData: [0.9722, 0.9682, 0.9721, 0.9750, 0.9800, 0.9853, 0.9997, 1.0021, 0.9975, 1.0037, 1.0433, 1.0411, 1.0415, 1.0369, 1.0273, 1.0105, 1.0062, 0.9906, 0.9919, 0.9691]
-        </rosparam>
-        <rosparam ns="leftController">
-            velocityList: [0, 0, 0.0799502, 0.23266, 0.344109, 0.473781, 0.602644, 0.73813, 0.875955, 1.00699, 1.1404]
-            voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
-            touqueVoltageMutiplier: 1.33
-        </rosparam>
-        <rosparam ns="rightController">
-            velocityList: [0, 0, 0.109535, 0.220684, 0.353026, 0.466657, 0.585258, 0.710991, 0.850519, 0.980354, 1.11749]
-            voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
-            touqueVoltageMutiplier: 1.13
-        </rosparam>
-        <param name="leftMotor/device" value="/dev/gpiopwm/18"/>
-        <param name="rightMotor/device" value="/dev/gpiopwm/13"/>
-        <rosparam ns="imu">
-            interruptPin: 14
-            sampleRate: 500.0
-            dlpfMode: 0
-            gyroOffset:     [  3.65464,  -3.02076,  0.670199]
-            gyroCorrectMat: [   0.995762,           0,   0.0919717,
-                             0.000199762,    0.999998, -0.00216279,
-                              -0.0919715,  0.00217199,    0.995759]
-        </rosparam>
+    <node pkg="rmcore" type="driver_node" name="driver_node" required="true">
+        <rosparam command="load" file="$(find rmcore)/cfg/config.yaml"/>
+        <rosparam command="load" file="$(find rmcore)/cfg/plan.yaml" ns="commandComputer"/>
+        <rosparam command="load" file="$(find rmcore)/map/test_map.yaml" ns="commandComputer/map"/>
+        <rosparam command="load" file="$(find rmcore)/map/test_plan.yaml" ns="commandComputer/plan"/>
     </node>
 </launch>

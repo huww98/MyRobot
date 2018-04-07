@@ -74,8 +74,6 @@ find_package(Threads REQUIRED)
 #   Action2.action
 # )
 
-roslaunch_add_file_check(launch)
-
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES

@@ -46,6 +46,7 @@ void RosEncoder::timeouted()
     auto now = steady_clock::now();
     encoder::Data data;
     data.time = now - maxInterval / 2;
+    data.var = variance * pow(0.25, timeoutTickCount);
     if (timeoutTickCount == 0)
         data.velocity = minVelocity / 2;
     else
@@ -96,6 +97,12 @@ RosEncoder::RosEncoder(TickCallbackType tick, ros::NodeHandle nh, string name)
     }
     else
         collabrateData.push_back(1.0);
+
+    if (!nh.getParam("variance", variance))
+    {
+        ROS_FATAL_NAMED(logName, "variance parameter must be set.");
+        ROS_BREAK();
+    }
 
     ROS_DEBUG_NAMED(logName, "%s: enabling ISR", name.c_str());
     pin.EnableISR(Edge::BOTH, [this](const DigitalValue &v) { this->pinChanged(v); },

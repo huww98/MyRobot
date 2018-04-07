@@ -123,9 +123,11 @@ RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle
     int dlpfMode;
     nh.param<int>("dlpfMode", dlpfMode, 0x01);
 
-    std::string key;
-    if (nh.searchParam("g", key))
-        nh.getParam(key, g);
+    if (!nh.getParam("variance", variance))
+    {
+        ROS_FATAL_NAMED(imuLogName, "variance parameter must be set.");
+        ROS_BREAK();
+    }
 
     resetIMU();
     this_thread::sleep_for(100ms);

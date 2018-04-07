@@ -31,6 +31,8 @@ struct AccelerationCommand
 
     double &angular() {return vec(1);}
     double angular() const {return vec(1);}
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 #endif

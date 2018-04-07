@@ -3,7 +3,7 @@
 using namespace std;
 
 StateManager::StateManager(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
-    : imuQueue(32), leftEncoderQueue(8), rightEncoderQueue(8), kf(baseWidth, controller, initState),
+    : imuQueue(128), leftEncoderQueue(32), rightEncoderQueue(32), kf(baseWidth, controller, initState),
       insertThread([this] { this->insertWorker(); })
 {
 }

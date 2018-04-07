@@ -26,6 +26,7 @@ class RosEncoder
     int timeoutTickCount = 0;
     int tickCount = 0;
     std::vector<double> collabrateData;
+    double variance;
 
     void pinChanged(const DigitalValue &currentValue);
     void timeouted();

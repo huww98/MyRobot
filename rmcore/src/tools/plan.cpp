@@ -15,6 +15,8 @@ struct Segment
 {
     int Id;
     Eigen::Vector2d lastPoint;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 bool distanceComp(const Eigen::Vector2d &target, const PoseSE2 &a, const PoseSE2 &b)
@@ -35,7 +37,7 @@ int main(int argc, char **argv)
         ROS_BREAK();
     }
 
-    vector<Eigen::Vector2d> viaPoints;
+    ViaPointContainer viaPoints;
 
     auto segments = map["segments"];
     vector<Segment> segs;
@@ -55,7 +57,6 @@ int main(int argc, char **argv)
     }
     auto beginPoint = *viaPoints.begin();
     auto endPoint = *viaPoints.rbegin();
-    ViaPointContainer vc(viaPoints.begin()+1, viaPoints.end()-1);
 
     TebConfig cfg;
     dynamic_reconfigure::Server<TebLocalPlannerReconfigureConfig> dynamic_recfg(localNh);
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
     TebVisualizationPtr vis(new TebVisualization(localNh, cfg));
 
     TebOptimalPlanner planner(cfg);
-    planner.setViaPoints(&vc);
+    planner.setViaPoints(&viaPoints);
     planner.setVisualization(vis);
     vector<geometry_msgs::PoseStamped> initPlan;
     geometry_msgs::PoseStamped pose;
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
         double cost = planner.getCurrentCost();
         ROS_INFO("current cost: %f", cost);
         planner.visualize();
-        vis->publishViaPoints(vc);
+        vis->publishViaPoints(viaPoints);
     }
 
     ofstream fout("plan.yaml");

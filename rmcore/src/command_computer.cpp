@@ -68,7 +68,7 @@ void CommandComputer::clearOldViaPoint()
 void CommandComputer::loadSegments()
 {
     auto loadedSegCount = nextSegment - currentOnSegment;
-    while (loadedSegCount < 2)
+    while (loadedSegCount < 2 && nextSegment != allSegments.end())
     {
         auto &loadingSeg = *nextSegment;
 
@@ -81,7 +81,9 @@ void CommandComputer::loadSegments()
             planner.teb().addTimeDiff(t);
         }
 
-        viaPoints.push_back(*(prev(nextSegment)->ViaPoints.rbegin())); // push the last viaPoint of last segment
+        if(nextSegment != allSegments.begin())
+            viaPoints.push_back(*(prev(nextSegment)->ViaPoints.rbegin())); // push the last viaPoint of last segment
+
         for (size_t i = 0; i< loadingSeg.ViaPoints.size() - 1; i++)
         {
             viaPoints.push_back(loadingSeg.ViaPoints[i]);
@@ -122,7 +124,7 @@ void CommandComputer::loadConfig(ros::NodeHandle nh)
         ROS_FATAL("plan must be set");
         ROS_BREAK();
     }
-    segments = map["segments"];
+    segments = plan["segments"];
     for (int i = 0; i < segments.size(); i++)
     {
         auto s = segments[i];
@@ -142,4 +144,7 @@ void CommandComputer::loadConfig(ros::NodeHandle nh)
             seg.InitialPlanDt.push_back(t);
         }
     }
+
+    nextSegment = allSegments.begin();
+    currentOnSegment = allSegments.begin();
 }

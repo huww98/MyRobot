@@ -29,20 +29,23 @@ class KalmanFilter
     template <int ObservationVectorLength>
     using Updater = Updater<stateCount, ObservationVectorLength, StateType>;
 
+    using StepList = std::list<StepPtr>;
+
     static int constexpr StateCount = stateCount;
 
-    KalmanFilter(StepPtr &&firstStep)
+    KalmanFilter(const StateType &initState, PredictorPtr &&predictor)
     {
-        pendingSteps.push_back(std::move(firstStep));
+        pendingSteps.push_back(std::make_unique<InitialStep<stateCount, StateType>>(initState));
         lastUpdatePos.fill(pendingSteps.begin());
+        invalidStateBegin = pendingSteps.end();
+        Predict(TimePointType::min(), std::move(predictor));
     }
 
     void Predict(TimePointType time, PredictorPtr &&predictor)
     {
         auto beforePos = findBeforePos(time);
         auto afterPos = std::next(beforePos);
-        auto updatePos = afterPos;
-        for (; updatePos != pendingSteps.end(); updatePos++)
+        for (auto updatePos = afterPos; updatePos != pendingSteps.end(); updatePos++)
         {
             if (auto uStep = dynamic_cast<UpdateStepType *>(updatePos->get()))
                 uStep->ReplacePredictor(predictor);
@@ -89,19 +92,30 @@ class KalmanFilter
         lastStep->SetDuration(t - lastStep->GetTime());
 
         // last state become invalid
-        if (invalidStateBegin == pendingSteps.end())
-            invalidStateBegin = std::prev(pendingSteps.end());
+        if (invalidStateBegin == pendingSteps.end() && pendingSteps.size() > 1)
+            invalidStateBegin--;
     }
 
     void UpdateToLatest()
     {
+        UpdateTo(pendingSteps.end());
+    }
+
+    void UpdateTo(typename StepList::iterator newInvalidStateBegin)
+    {
+        if(invalidStateBegin == pendingSteps.end())
+            return;
+
+        if (newInvalidStateBegin != pendingSteps.end() &&
+            (*newInvalidStateBegin)->GetTime() < (*invalidStateBegin)->GetTime())
+            return;
+
         auto state = (*std::prev(invalidStateBegin))->GetFinishedState();
-        for (auto runningPos = invalidStateBegin; runningPos != pendingSteps.end(); runningPos++)
-            state = (*runningPos)->Run(state);
+        for (; invalidStateBegin != newInvalidStateBegin; invalidStateBegin++)
+            state = (*invalidStateBegin)->Run(state);
     }
 
   private:
-    using StepList = std::list<StepPtr>;
     StepList pendingSteps;
     TimePointType predictEndTime;
     typename StepList::iterator invalidStateBegin;
@@ -110,7 +124,7 @@ class KalmanFilter
 
     typename StepList::iterator findBeforePos(TimePointType time)
     {
-        auto insertPos = pendingSteps.end();
+        auto insertPos = prev(pendingSteps.end());
         while ((*insertPos)->GetTime() > time)
             insertPos--;
 
@@ -121,7 +135,7 @@ class KalmanFilter
     {
         auto earestUpdatedPos = *std::min_element(lastUpdatePos.begin(), lastUpdatePos.end(),
                                                   [](auto a, auto b) { return (*a)->GetTime() < (*b)->GetTime(); });
-
+        UpdateTo(next(earestUpdatedPos));
         pendingSteps.erase(pendingSteps.begin(), earestUpdatedPos);
     }
 
@@ -138,7 +152,7 @@ class KalmanFilter
         auto endTime = afterPos == pendingSteps.end() ? predictEndTime : afterStep->GetTime();
         insertedStep->SetDuration(endTime - insertedStep->GetTime());
 
-        if ((*invalidStateBegin)->GetTime() > insertedStep->GetTime())
+        if (invalidStateBegin == pendingSteps.end() || (*invalidStateBegin)->GetTime() > insertedStep->GetTime())
             invalidStateBegin = insertedPos;
 
         lastUpdatePos[UpdateIndex] = insertedPos;

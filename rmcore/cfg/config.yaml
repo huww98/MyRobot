@@ -1,0 +1,38 @@
+baseWidth: 0.131
+inertia: 0.54
+batteryVoltage: 7.65
+controlFrequency: 20.0
+encoder:
+    tickPerMeter: 97.94
+    minVelocity: 0.05
+leftEncoder:
+    pin: 10
+    collabrateData: [1.0378, 1.0367, 1.0360, 1.0194, 1.0095, 1.0148, 1.0110, 0.9872, 0.9729, 0.9744, 0.9618, 0.9575, 0.9617, 0.9702, 0.9708, 0.9831, 1.0132, 1.0226, 1.0368, 1.0450]
+    variance: 1.0e-4
+rightEncoder:
+    pin: 4
+    collabrateData: [0.9722, 0.9682, 0.9721, 0.9750, 0.9800, 0.9853, 0.9997, 1.0021, 0.9975, 1.0037, 1.0433, 1.0411, 1.0415, 1.0369, 1.0273, 1.0105, 1.0062, 0.9906, 0.9919, 0.9691]
+    variance: 1.0e-4
+leftController:
+    velocityList: [0, 0, 0.0799502, 0.23266, 0.344109, 0.473781, 0.602644, 0.73813, 0.875955, 1.00699, 1.1404]
+    voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
+    touqueVoltageMutiplier: 1.33
+    touqueVariance: 0.5
+rightController:
+    velocityList: [0, 0, 0.109535, 0.220684, 0.353026, 0.466657, 0.585258, 0.710991, 0.850519, 0.980354, 1.11749]
+    voltageList: [0, 0.785, 1.57, 2.355, 3.14, 3.925, 4.71, 5.495, 6.28, 7.065, 7.85]
+    touqueVoltageMutiplier: 1.13
+    touqueVariance: 0.5
+leftMotor:
+    device: /dev/gpiopwm/18
+rightMotor:
+    device: /dev/gpiopwm/13
+imu:
+    interruptPin: 14
+    sampleRate: 500.0
+    dlpfMode: 0
+    gyroOffset:     [  3.77514,  -2.81998,-0.0351161]
+    gyroCorrectMat: [   0.995465,           0,   0.0951334,
+                     0.000115482,    0.999999, -0.00120839,
+                      -0.0951333,  0.00121389,    0.995464]
+    variance: 0.003

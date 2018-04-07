@@ -1,5 +1,5 @@
 <launch>
-    <rosparam command="load" ns="map" file="$(find rmcore)/map/map.yaml" />
+    <rosparam command="load" ns="map" file="$(find rmcore)/map/test_map.yaml" />
     <node pkg="rmcore" name="plan" type="plan" required="true">
         <rosparam command="load" file="$(find rmcore)/cfg/plan.yaml" />
     </node>

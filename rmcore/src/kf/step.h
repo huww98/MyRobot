@@ -34,6 +34,21 @@ class Step
 };
 
 template <int stateCount, typename StateT = State<stateCount>>
+class InitialStep : public Step<stateCount, StateT>
+{
+  private:
+    using Base = Step<stateCount, StateT>;
+
+  public:
+    InitialStep(const StateT &initState):Base(Base::TimePointType::min())
+    {
+        this->finishedState = initState;
+    }
+
+    virtual const StateT &Run(const StateT &initialState) override final {};
+};
+
+template <int stateCount, typename StateT = State<stateCount>>
 class Predictor
 {
   public:

@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     cout << predictedA.accel.vec << endl << endl;
     cout << predictedA.jacobianOfVelocity << endl << endl;
 
-    auto duration = 10ms;
+    auto duration = 50ms;
     auto params = predictor.GetParameters(state, duration);
     cout << params.NextStateVec << endl;
     cout << params.F << endl

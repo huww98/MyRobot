@@ -10,6 +10,8 @@ struct State
     using CovMat = Eigen::Matrix<double, stateCount, stateCount>;
     ValueVector State;
     CovMat Covariance;
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 }
 

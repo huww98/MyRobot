@@ -3,22 +3,8 @@
 using namespace std;
 using namespace std::chrono;
 
-class InitialStep : public KalmanFilter::StepType
-{
-  private:
-    using Base = KalmanFilter::StepType;
-
-  public:
-    InitialStep(const RobotState &initState):Base(Base::TimePointType::min())
-    {
-        this->finishedState = initState;
-    }
-
-    virtual const StateType &Run(const StateType &initialState) override final {};
-};
-
 KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
-    : controller(&controller), Base(make_unique<InitialStep>(initState))
+    : controller(&controller), Base(initState, make_shared<Predictor>(ControlVoltage{0,0}, controller))
 {
     InitEncoderUpdater(baseWidth);
 }
@@ -55,8 +41,10 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
 
     auto predictedA = controller.PredictAcceleration(initialState, cmd);
     PredictParameters params;
-    double v = initialState.Velocity() + predictedA.accel.linear() * t;
-    double omega = initialState.AngularVelocity() + predictedA.accel.angular() * t;
+    double a = predictedA.accel.linear();
+    double alpha = predictedA.accel.angular();
+    double v = initialState.Velocity() + a * t;
+    double omega = initialState.AngularVelocity() + alpha * t;
     double meanV = (initialState.Velocity() + v) / 2;
     double meanOmega = (initialState.AngularVelocity() + omega) / 2;
     double deltaTheta = meanOmega * t;
