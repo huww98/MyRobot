@@ -10,6 +10,7 @@
 #include "kf.h"
 #include "control_scheduler.h"
 #include "remote_controller.h"
+#include "command_computer.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -63,17 +64,19 @@ int main(int argc, char **argv)
     RosEncoder rightEncoder(rightVelocityUpdated, ros::NodeHandle("~rightEncoder"), "rightEncoder");
     ROS_INFO("Encoder Initialized.");
 
+    CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
+
     while (ros::ok())
     {
         auto time = scheduler.GetScheduledTime();
         auto nextState = stateManager.GetPredictedState(time);
-        // auto cmd = cmdComputer.ComputeCommand(nextState);
+        auto cmd = cmdComputer.ComputeCommand(nextState, time);
         scheduler.SleepToScheduledTime();
 
         ControlVoltage v;
         if(remoteController.Running())
         {
-            // v = controller.IssueCommand(nextState, cmd);
+            v = controller.IssueCommand(nextState, cmd);
         }
         else
         {

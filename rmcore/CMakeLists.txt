@@ -17,6 +17,8 @@ add_definitions("-fdiagnostics-color")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslaunch
+  std_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -54,10 +56,11 @@ find_package(Threads REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   WheelVelocityStamped.msg
-# )
+add_message_files(
+  FILES
+  turn.msg
+  visual_info.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -74,10 +77,10 @@ find_package(Threads REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -165,6 +168,7 @@ add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
     src/remote_controller.cpp
+    src/command_computer.cpp
 )
 
 ## Rename C++ executable without prefix

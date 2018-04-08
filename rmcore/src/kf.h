@@ -9,10 +9,10 @@
 
 struct ControlParameters;
 
-class KalmanFilter : public kf::KalmanFilter<3, 3, RobotState>
+class KalmanFilter : public kf::KalmanFilter<4, 3, RobotState>
 {
   private:
-    using Base = kf::KalmanFilter<3, 3, RobotState>;
+    using Base = kf::KalmanFilter<4, 3, RobotState>;
     RosDiffrentalController *controller;
     template <int idx>
     void UpdateEncoder(const encoder::Data &data);

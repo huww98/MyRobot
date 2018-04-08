@@ -1,6 +1,8 @@
 #ifndef KF_STATE_H
 #define KF_STATE_H
 
+#include <Eigen/Dense>
+
 namespace kf
 {
 template <int stateCount>

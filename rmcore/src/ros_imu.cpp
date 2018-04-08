@@ -5,6 +5,7 @@
 #include <chrono>
 #include "imu.h"
 #include "ros_imu.h"
+#include "utillities/constants.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -54,9 +55,6 @@ void RosImu::setSampleRate(double hz, uint8_t dlpfMode)
 
     expectedSampleInterval = duration_cast<steady_clock::duration>(1s / actualRate);
 }
-
-constexpr double PI = 3.14159265358979323846;
-constexpr double degreeToRad = PI / 180.0;
 
 void RosImu::dataReadyHandler()
 {

@@ -41,15 +41,14 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
 
     auto predictedA = controller.PredictAcceleration(initialState, cmd);
     PredictParameters params;
-    double a = predictedA.accel.linear();
-    double alpha = predictedA.accel.angular();
-    double v = initialState.Velocity() + a * t;
-    double omega = initialState.AngularVelocity() + alpha * t;
+    auto a = predictedA.accel.vec;
+    auto v = initialState.V() + a * t;
     double halfTSquare = 0.5 * t * t;
-    double theta = initialState.Angle() + halfTSquare * alpha;
-    params.NextStateVec << v, omega, theta;
-    params.F << Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t, 0,
-                halfTSquare * predictedA.jacobianOfVelocity(1, 0), t + halfTSquare * predictedA.jacobianOfVelocity(1, 1), 0;
+    auto x = initialState.X() + v * t + halfTSquare * a;
+    params.NextStateVec << v, x;
+    params.F.setZero();
+    params.F.block<2,2>(0,0) = Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t;
+    // 我们没有其他状态的估计，所以没有必要计算其他状态的噪音，也就没有必要算jacobian了
 
     // 噪音计算是一个近似。方差本应该和时间的平方成正比，但在这个实例中，本次控制与之前的控制结果关系较大，
     // 其协方差与时间成正比，且方差和协方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的
@@ -72,14 +71,14 @@ EncoderUpdater<idx>::EncoderUpdater(const encoder::Data &data)
 
 void InitEncoderUpdater(double baseWidth)
 {
-    EncoderUpdater<0>::H << 1, -baseWidth / 2, 0;
-    EncoderUpdater<1>::H << 1, baseWidth / 2, 0;
+    EncoderUpdater<0>::H << 1, -baseWidth / 2, 0, 0;
+    EncoderUpdater<1>::H << 1, baseWidth / 2, 0, 0;
 }
 
 template class EncoderUpdater<0>;
 template class EncoderUpdater<1>;
 
-ImuUpdater::UpdateParameters::HType ImuUpdater::H = (UpdateParameters::HType() << 0, 1, 0).finished();
+ImuUpdater::UpdateParameters::HType ImuUpdater::H = (UpdateParameters::HType() << 0, 1, 0, 0).finished();
 
 ImuUpdater::ImuUpdater(const imu::Data &data)
 {
