@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
     CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
 
-    while (ros::ok())
+    while (ros::ok() && !cmdComputer.IsFinished())
     {
         auto time = scheduler.GetScheduledTime();
         auto nextState = stateManager.GetPredictedState(time);

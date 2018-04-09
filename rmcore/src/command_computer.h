@@ -74,6 +74,7 @@ class CommandComputer
   public:
     CommandComputer(ros::NodeHandle nh);
     AccelerationCommand ComputeCommand(const RobotState &state, std::chrono::steady_clock::time_point time);
+    bool IsFinished() { return navigateState == NavigateState::Finished; }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -91,11 +92,12 @@ class CommandComputer
     double i_enable_k_threshold;
     double distance_when_start_turn;
     double distance_after_go_straight;
+    double distance_after_finish;
 
     void turn_cb(rmcore::turnConstPtr msg);
     ros::Subscriber turn_sub;
 
-    std::vector<int> turnList;
+    std::vector<int> turnList; // -1 for left, 1 for right, 0 for go straght, 2 for finish
     std::vector<int>::iterator nextTurn;
 
     Eigen::Vector2d i;
@@ -106,7 +108,7 @@ class CommandComputer
     std::unique_ptr<Turn> turn;
     Navigator* currentNavigator;
 
-    enum NavigateState { FollowingLine, GoingStraght, GoingStraghtBeforeTurn, Turning };
+    enum NavigateState { FollowingLine, GoingStraght, GoingStraghtBeforeTurn, GoingStraghtBeforeFinish, Turning, Finished };
     NavigateState navigateState = NavigateState::FollowingLine;
 
     void transferStateTo(NavigateState state);

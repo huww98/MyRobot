@@ -87,6 +87,7 @@ CommandComputer::CommandComputer(ros::NodeHandle nh): nh(nh)
     i_enable_k_threshold = GetRequiredParameter<double>("i_enable_k_threshold", nh);
     distance_when_start_turn = GetRequiredParameter<double>("distance_when_start_turn", nh);
     distance_after_go_straight = GetRequiredParameter<double>("distance_after_go_straight", nh);
+    distance_after_finish = GetRequiredParameter<double>("distance_after_finish", nh);
     turnList = GetRequiredParameter<vector<int>>("turnList", nh);
 
     nextTurn = turnList.begin();
@@ -98,6 +99,8 @@ CommandComputer::CommandComputer(ros::NodeHandle nh): nh(nh)
 
 AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, steady_clock::time_point time)
 {
+    ROS_ASSERT(!IsFinished());
+
     double t = duration_cast<chrono::duration<double>>(time-lastTime).count();
     lastTime = time;
 
@@ -135,6 +138,9 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
             nextTurn++;
             transferStateTo(NavigateState::Turning);
             break;
+        case NavigateState::GoingStraghtBeforeFinish:
+            goStraght.reset(nullptr);
+            transferStateTo(NavigateState::Finished);
         default:
             ROS_BREAK();
         }
@@ -156,16 +162,25 @@ void CommandComputer::turn_cb(rmcore::turnConstPtr msg)
         return;
     }
 
-    if (*nextTurn == 0)
+    switch (*nextTurn)
     {
+    case 0:
         goStraght.reset(new GoStraght(msg->k, msg->distance + distance_after_go_straight));
         transferStateTo(NavigateState::GoingStraght);
         nextTurn++;
-    }
-    else
-    {
+        break;
+    case 1:
+    case -1:
         goStraght.reset(new GoStraght(msg->k, msg->distance - distance_when_start_turn));
         transferStateTo(NavigateState::GoingStraghtBeforeTurn);
+        break;
+    case 2:
+        goStraght.reset(new GoStraght(msg->k, msg->distance + distance_after_finish));
+        transferStateTo(NavigateState::GoingStraght);
+        nextTurn++;
+        break;
+    default:
+        ROS_BREAK();
     }
 }
 
@@ -178,10 +193,13 @@ void CommandComputer::transferStateTo(NavigateState state)
         break;
     case NavigateState::GoingStraght:
     case NavigateState::GoingStraghtBeforeTurn:
+    case NavigateState::GoingStraghtBeforeFinish:
         currentNavigator = goStraght.get();
         break;
     case NavigateState::Turning:
         currentNavigator = turn.get();
+        break;
+    case NavigateState::Finished:
         break;
     default:
         ROS_BREAK();
