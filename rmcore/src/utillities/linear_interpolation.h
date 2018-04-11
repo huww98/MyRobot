@@ -12,7 +12,7 @@ class LinearInterpolation
     {
         assert(xList.size() == yList.size());
 
-        for (int i = 0; i < xList.size(); i++)
+        for (size_t i = 0; i < xList.size(); i++)
         {
             xyMap.insert(std::make_pair(xList[i], yList[i]));
         }

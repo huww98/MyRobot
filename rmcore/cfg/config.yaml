@@ -36,3 +36,20 @@ imu:
                      0.000115482,    0.999999, -0.00120839,
                       -0.0951333,  0.00121389,    0.995464]
     variance: 0.003
+commandComputer:
+    exit_turn_k_threshold: 0.25
+    turning_max_v: 0.5
+    turn_speed: 2.5
+    weight_k: 22
+    weight_xOffset: 1000
+    max_centripetal_a: 1.5
+    max_v: 1.1
+    weight_v_p: 10
+    weight_omiga_p: 10
+    weight_v_i: 1
+    weight_omiga_i: 1
+    i_enable_k_threshold: 0.25
+    distance_when_start_turn: 0.2
+    distance_after_go_straight: 0.1
+    distance_after_finish: 0.3
+    turnList: [0, 0, -1, 0, 1, 2]

@@ -5,8 +5,10 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 message(STATUS "c++ compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 add_definitions("-fdiagnostics-color")
@@ -165,6 +167,7 @@ add_executable(${PROJECT_NAME}_gyro_offset src/tools/gyro_offset.cpp)
 add_executable(${PROJECT_NAME}_encoder_collabrate src/tools/encoder_collabrate.cpp)
 add_executable(${PROJECT_NAME}_experiment_tools src/tools/experiment_tools.cpp)
 add_executable(${PROJECT_NAME}_derivative_test src/tools/derivative_test.cpp)
+add_executable(${PROJECT_NAME}_kf_test src/tools/kf_test.cpp)
 add_executable(${PROJECT_NAME}_driver_node
     src/driver_node.cpp
     src/remote_controller.cpp
@@ -179,11 +182,12 @@ set_target_properties(${PROJECT_NAME}_gyro_offset PROPERTIES OUTPUT_NAME gyro_of
 set_target_properties(${PROJECT_NAME}_encoder_collabrate PROPERTIES OUTPUT_NAME encoder_collabrate PREFIX "")
 set_target_properties(${PROJECT_NAME}_experiment_tools PROPERTIES OUTPUT_NAME experiment_tools PREFIX "")
 set_target_properties(${PROJECT_NAME}_derivative_test PROPERTIES OUTPUT_NAME derivative_test PREFIX "")
+set_target_properties(${PROJECT_NAME}_kf_test PROPERTIES OUTPUT_NAME kf_test PREFIX "")
 set_target_properties(${PROJECT_NAME}_driver_node PROPERTIES OUTPUT_NAME driver_node PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_driver_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_driver_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_gyro_offset
@@ -198,7 +202,9 @@ target_link_libraries(${PROJECT_NAME}_experiment_tools
   ${PROJECT_NAME}_librosmotor
 )
 target_link_libraries(${PROJECT_NAME}_derivative_test
-  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}_libcore
+)
+target_link_libraries(${PROJECT_NAME}_kf_test
   ${PROJECT_NAME}_libcore
 )
 target_link_libraries(${PROJECT_NAME}_driver_node

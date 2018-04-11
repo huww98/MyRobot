@@ -1,0 +1,4 @@
+leftMotor:
+    device: /dev/null
+rightMotor:
+    device: /dev/null

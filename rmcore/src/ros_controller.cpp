@@ -34,7 +34,7 @@ LinearInterpolation buildVelVolInterpolation(ros::NodeHandle &nh, string name)
 }
 
 RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &motor)
-    : motor(&motor), name(name), velocityVoltageInterpolation(buildVelVolInterpolation(nh, name))
+    : motor(&motor), velocityVoltageInterpolation(buildVelVolInterpolation(nh, name)), name(name)
 {
     if (!nh.getParam("touqueVoltageMutiplier", touqueVoltageMutiplier))
     {

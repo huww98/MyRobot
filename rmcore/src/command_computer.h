@@ -32,6 +32,7 @@ class FollowLine : public Navigator
     ros::Subscriber visual_info_sub;
     void visual_info_cb(rmcore::visual_infoConstPtr msg);
 
+    double initialized = false;
     double k;
     double x_offset;
 };

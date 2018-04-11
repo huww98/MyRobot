@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     cout << fixed << setprecision(4);
     for (int num = 0; num < 2; num++)
     {
-        for (int i = 0; i < rawData[num].size() - 19; i++)
+        for (size_t i = 0; i < rawData[num].size() - 19; i++)
         {
             int calculatingIndex = i + 10;
             double sum = 0;

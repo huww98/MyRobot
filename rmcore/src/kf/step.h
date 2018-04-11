@@ -27,6 +27,8 @@ class Step
     virtual const StateType &Run(const StateType &initialState) = 0;
     void SetDuration(DurationType d) { this->duration = d; }
 
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   protected:
     DurationType duration;
     TimePointType time;
@@ -45,7 +47,7 @@ class InitialStep : public Step<stateCount, StateT>
         this->finishedState = initState;
     }
 
-    virtual const StateT &Run(const StateT &initialState) override final {};
+    virtual const StateT &Run(const StateT &initialState) override final { return this->finishedState; };
 };
 
 template <int stateCount, typename StateT = State<stateCount>>
@@ -195,7 +197,8 @@ class UpdateStep : public Step<stateCount, StateType>
 
     virtual const StateType &Run(const StateType &initialState) override
     {
-        this->updater->Update(this->predictor->Predict(initialState, this->duration));
+        this->finishedState = this->updater->Update(this->predictor->Predict(initialState, this->duration));
+        return this->finishedState;
     }
 
     PredictorPtr GetPredictor() { return this->predictor; }

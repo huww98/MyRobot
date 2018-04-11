@@ -1,8 +1,5 @@
 <launch>
     <node pkg="rmcore" type="driver_node" name="driver_node" required="true">
         <rosparam command="load" file="$(find rmcore)/cfg/config.yaml"/>
-        <rosparam command="load" file="$(find rmcore)/cfg/plan.yaml" ns="commandComputer"/>
-        <rosparam command="load" file="$(find rmcore)/map/test_map.yaml" ns="commandComputer/map"/>
-        <rosparam command="load" file="$(find rmcore)/map/test_plan.yaml" ns="commandComputer/plan"/>
     </node>
 </launch>

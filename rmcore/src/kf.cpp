@@ -4,14 +4,14 @@ using namespace std;
 using namespace std::chrono;
 
 KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
-    : controller(&controller), Base(initState, make_shared<Predictor>(ControlVoltage{0,0}, controller))
+    : Base(initState, PredictorPtr(new Predictor(ControlVoltage{0,0}, controller))), controller(&controller)
 {
     InitEncoderUpdater(baseWidth);
 }
 
 void KalmanFilter::Predict(const ControlParameters &parameters)
 {
-    Base::Predict(parameters.time, make_shared<Predictor>(parameters.command, *controller));
+    Base::Predict(parameters.time, PredictorPtr(new Predictor(parameters.command, *controller)));
 }
 
 constexpr int encoderUpdateLineOffset = 0, imuUpdateLine = 2;
@@ -19,7 +19,7 @@ constexpr int encoderUpdateLineOffset = 0, imuUpdateLine = 2;
 template<int idx>
 void KalmanFilter::UpdateEncoder(const encoder::Data &data)
 {
-    Base::Update<encoderUpdateLineOffset + idx>(data.time, make_unique<EncoderUpdater<idx>>(data));
+    Base::Update<encoderUpdateLineOffset + idx>(data.time, Base::UpdaterPtr(new EncoderUpdater<idx>(data)));
 }
 
 template void KalmanFilter::UpdateEncoder<0>(const encoder::Data &data);
@@ -27,7 +27,7 @@ template void KalmanFilter::UpdateEncoder<1>(const encoder::Data &data);
 
 void KalmanFilter::UpdateImu(const imu::Data &data)
 {
-    Base::Update<imuUpdateLine>(data.time, make_unique<ImuUpdater>(data));
+    Base::Update<imuUpdateLine>(data.time, Base::UpdaterPtr(new ImuUpdater(data)));
 }
 
 Predictor::Predictor(const ControlVoltage &cmd, const RosDiffrentalController &controller)

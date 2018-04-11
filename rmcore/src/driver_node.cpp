@@ -89,6 +89,11 @@ int main(int argc, char **argv)
         params.command = v;
         params.time = steady_clock::now();
         stateManager.UpdateControl(params);
+
+        ROS_DEBUG_STREAM("control cycle end. state: " << nextState.State <<
+            " predicted time: " << time.time_since_epoch().count() <<
+            " real time: " << params.time.time_since_epoch().count() << " command: " << cmd.vec <<
+            " voltage: " << v.leftVoltage << ", " << v.rightVoltage);
     }
 
     imu.close();

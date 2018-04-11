@@ -81,9 +81,8 @@ void RosImu::dataReadyHandler()
     }
     correctedData.time = lastSampleTime;
 
-    ROS_DEBUG_NAMED(imuLogName, "%lld angular velocity: %f",
-                    correctedData.time.time_since_epoch().count(),
-                    correctedData.angularVecocity);
+    ROS_DEBUG_STREAM_NAMED(imuLogName, correctedData.time.time_since_epoch().count() <<
+        " angular velocity: " << correctedData.angularVecocity);
 
     this->dataReady(correctedData);
 }
@@ -108,6 +107,8 @@ int getInterruptPin(const ros::NodeHandle& nh)
 
     ROS_FATAL_NAMED(imuLogName, "interruptPin parameter must be set.");
     ROS_BREAK();
+
+    return pin;
 }
 
 RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle nh) :
@@ -133,6 +134,7 @@ RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle
     this_thread::sleep_for(100ms);
     setSampleRate(sampleRate, (uint8_t)dlpfMode);
     this_thread::sleep_for(100ms);
+    lastSampleTime = steady_clock::now();
     enableDataReadyInterrupt([this] { this->dataReadyHandler(); });
 }
 

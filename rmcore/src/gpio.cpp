@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <iostream>
 #include <sstream>
 #include <fstream>
 #include <system_error>
@@ -120,7 +121,7 @@ void DigitalGpio::interruptHandler(std::function<void(const DigitalValue &)> isr
     {
         int nfds = epoll_wait(epollfd, events, MAX_EVENTS, timeout);
         if (nfds == -1)
-            throw runtime_error("epoll_wait");
+            cerr << "epoll_wait failed" << endl;
         if(nfds == 0)
         {
             timeoutRoutine();

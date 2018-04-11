@@ -12,6 +12,7 @@ FollowLine::FollowLine(ros::NodeHandle &nh)
 
 bool FollowLine::Navigate(const RobotState &state, NavigateParameters &params, steady_clock::time_point time)
 {
+    ROS_ERROR_COND(!initialized, "Navigating with no visual info");
     params.k = k;
     params.x_offset = x_offset;
     params.max_v = 1e99;
@@ -20,6 +21,7 @@ bool FollowLine::Navigate(const RobotState &state, NavigateParameters &params, s
 
 void FollowLine::visual_info_cb(rmcore::visual_infoConstPtr msg)
 {
+    initialized = true;
     x_offset = msg->x_offset;
     k = msg->k;
 }
@@ -40,9 +42,9 @@ bool GoStraght::Navigate(const RobotState &state, NavigateParameters &params, st
     return state.Distance() < targetDistance;
 }
 
-Turn::Turn(ros::NodeHandle &nh, int direction, double k): k(k), direction(direction)
+Turn::Turn(ros::NodeHandle &nh, int direction, double k): direction(direction), k(k)
 {
-    exit_k_thre = GetRequiredParameter<double>("exit_k_threshold", nh);
+    exit_k_thre = GetRequiredParameter<double>("exit_turn_k_threshold", nh);
     max_v = GetRequiredParameter<double>("turning_max_v", nh);
     turnSpeed = GetRequiredParameter<double>("turn_speed", nh);
 }
@@ -108,7 +110,7 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
     bool navigateFinished = currentNavigator->Navigate(state, params, time);
 
     Eigen::Vector2d setpoint;
-    setpoint(1) = params.k * weight_k + params.x_offset * weight_xOffset;
+    setpoint(1) = -params.k * weight_k - params.x_offset * weight_xOffset;
     setpoint(0) = min({max_centripetal_a / setpoint(1), max_v, params.max_v});
 
     Eigen::Vector2d error = setpoint - state.V();

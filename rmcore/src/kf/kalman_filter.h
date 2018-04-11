@@ -4,6 +4,7 @@
 #include <memory>
 #include <array>
 #include <algorithm>
+#include <functional>
 #include "step.h"
 
 namespace kf
@@ -29,16 +30,17 @@ class KalmanFilter
     template <int ObservationVectorLength>
     using Updater = Updater<stateCount, ObservationVectorLength, StateType>;
 
-    using StepList = std::list<StepPtr>;
+    using StepList = std::list<StepPtr, Eigen::aligned_allocator<StepPtr>>;
 
     static int constexpr StateCount = stateCount;
 
     KalmanFilter(const StateType &initState, PredictorPtr &&predictor)
     {
-        pendingSteps.push_back(std::make_unique<InitialStep<stateCount, StateType>>(initState));
+        pendingSteps.push_back(StepPtr(new InitialStep<stateCount, StateType>(initState)));
         lastUpdatePos.fill(pendingSteps.begin());
         invalidStateBegin = pendingSteps.end();
-        Predict(TimePointType::min(), std::move(predictor));
+        Predict((*pendingSteps.rbegin())->GetTime() + typename TimePointType::duration(1), std::move(predictor));
+        // Add 1 duration to make PredictStep go after InitialStep
     }
 
     void Predict(TimePointType time, PredictorPtr &&predictor)
@@ -52,7 +54,7 @@ class KalmanFilter
             else
                 break;
         }
-        doInsert<0>(beforePos, std::make_unique<PredictStepType>(time, predictor));
+        doInsert<0>(beforePos, StepPtr(new PredictStepType(time, predictor)));
     }
 
     template <int UpdateLine>
@@ -74,7 +76,7 @@ class KalmanFilter
             assert(false);
         }
 
-        doInsert<UpdateLine + 1>(beforePos, std::make_unique<UpdateStepType>(time, predictor, std::move(updater)));
+        doInsert<UpdateLine + 1>(beforePos, StepPtr(new UpdateStepType(time, predictor, std::move(updater))));
     }
 
     const StateType &GetLatestState()
@@ -107,12 +109,14 @@ class KalmanFilter
             return;
 
         if (newInvalidStateBegin != pendingSteps.end() &&
-            (*newInvalidStateBegin)->GetTime() < (*invalidStateBegin)->GetTime())
+            (*newInvalidStateBegin)->GetTime() <= (*invalidStateBegin)->GetTime())
             return;
 
-        auto state = (*std::prev(invalidStateBegin))->GetFinishedState();
+        auto state = std::ref((*std::prev(invalidStateBegin))->GetFinishedState());
         for (; invalidStateBegin != newInvalidStateBegin; invalidStateBegin++)
-            state = (*invalidStateBegin)->Run(state);
+        {
+            state = std::ref((*invalidStateBegin)->Run(state));
+        }
     }
 
   private:
@@ -134,7 +138,7 @@ class KalmanFilter
     void dropHistory()
     {
         auto earestUpdatedPos = *std::min_element(lastUpdatePos.begin(), lastUpdatePos.end(),
-                                                  [](auto a, auto b) { return (*a)->GetTime() < (*b)->GetTime(); });
+                                                  [](auto &a, auto &b) { return (*a)->GetTime() < (*b)->GetTime(); });
         UpdateTo(next(earestUpdatedPos));
         pendingSteps.erase(pendingSteps.begin(), earestUpdatedPos);
     }

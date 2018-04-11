@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="rmcore" type="kf_test" name="kf_test" required="true">
+        <rosparam command="load" file="$(find rmcore)/cfg/config.yaml"/>
+        <rosparam command="load" file="$(find rmcore)/cfg/test.yaml"/>
+    </node>
+</launch>

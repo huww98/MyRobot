@@ -21,15 +21,15 @@ void RosEncoder::pinChanged(const DigitalValue &currentValue)
         if (interval > maxInterval*2)
         {
             data.velocity = this->minVelocity / 2;
-            ROS_DEBUG_NAMED(logName, "%s: %lld lnterval too large, velocity: %lf, tick: %d", name.c_str(),
-                            data.time.time_since_epoch().count(), data.velocity, tickCount);
+            ROS_DEBUG_STREAM_NAMED(logName, name << ": " << data.time.time_since_epoch().count() <<
+                " lnterval too large, velocity: " << data.velocity << ", tick: " << tickCount);
         }
         else
         {
             double rawV = meterPerTickTimesCountPerSecond / interval.count();
             data.velocity = rawV * collabrateData[tickCount % collabrateData.size()];
-            ROS_DEBUG_NAMED(logName, "%s: %lld raw velocity: %lf, collabrated velocity: %lf, tick: %d", name.c_str(),
-                            data.time.time_since_epoch().count(), rawV, data.velocity, tickCount);
+            ROS_DEBUG_STREAM_NAMED(logName, name << ": " << data.time.time_since_epoch().count() <<
+                " raw velocity: " << rawV << ", collabrated velocity: " << data.velocity << ", tick: " << tickCount);
         }
 
         tick(data);
@@ -52,8 +52,8 @@ void RosEncoder::timeouted()
     else
         data.velocity = 0;
     timeoutTickCount++;
-    ROS_DEBUG_NAMED(logName, "%s: %lld velocity: %lf wait timeouted", name.c_str(),
-                    data.time.time_since_epoch().count(), data.velocity);
+    ROS_DEBUG_STREAM_NAMED(logName, name << ": " << data.time.time_since_epoch().count() <<
+        " velocity: " << data.velocity << " wait timeouted");
     tick(data);
 }
 
@@ -65,10 +65,12 @@ int getPin(const ros::NodeHandle &nh, string name)
 
     ROS_FATAL_NAMED(logName, "%s: pin parameter must be set.", name.c_str());
     ROS_BREAK();
+
+    return pin;
 }
 
 RosEncoder::RosEncoder(TickCallbackType tick, ros::NodeHandle nh, string name)
-    : pin(getPin(nh, name), Direction::IN), name(name), tick(tick)
+    : name(name), pin(getPin(nh, name), Direction::IN), tick(tick)
 {
     double tickPerMeter;
     string key;
