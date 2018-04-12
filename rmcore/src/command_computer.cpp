@@ -109,18 +109,18 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
     NavigateParameters params;
     bool navigateFinished = currentNavigator->Navigate(state, params, time);
 
-    Eigen::Vector2d setpoint;
+    Eigen::Array2d setpoint;
     setpoint(1) = -params.k * weight_k - params.x_offset * weight_xOffset;
     setpoint(0) = min({max_centripetal_a / setpoint(1), max_v, params.max_v});
 
-    Eigen::Vector2d error = setpoint - state.V();
+    Eigen::Array2d error = setpoint - state.V().array();
     if(abs(params.k) < i_enable_k_threshold)
     {
         i += error * t;
     }
 
     AccelerationCommand a;
-    a.vec = error.cwiseProduct(weight_p) + i.cwiseProduct(weight_i);
+    a.vec = error * weight_p + i * weight_i;
 
     if (navigateFinished)
     {

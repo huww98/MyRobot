@@ -22,19 +22,20 @@ class LinearInterpolation
     {
         double y;
         auto upperPair = xyMap.upper_bound(x);
+        if(upperPair == xyMap.begin())
+        {
+            upperPair++;
+        }
+        else if(upperPair == xyMap.end())
+        {
+            upperPair--;
+        }
+
         auto lowerPair = prev(upperPair);
-        if (upperPair == xyMap.end())
-        {
-            y = lowerPair->second;
-            k = 0;
-        }
-        else
-        {
-            auto &x0 = lowerPair->first, &x1 = upperPair->first;
-            auto &y0 = lowerPair->second, &y1 = upperPair->second;
-            k = (y1 - y0) / (x1 - x0);
-            y = y0 + (x - x0) * k;
-        }
+        auto &x0 = lowerPair->first, &x1 = upperPair->first;
+        auto &y0 = lowerPair->second, &y1 = upperPair->second;
+        k = (y1 - y0) / (x1 - x0);
+        y = y0 + (x - x0) * k;
 
         return y;
     }
@@ -45,6 +46,15 @@ class LinearInterpolation
         return Y(x, k);
     }
 
+    double minX() const
+    {
+        return xyMap.begin()->first;
+    }
+
+    double maxX() const
+    {
+        return xyMap.rbegin()->first;
+    }
   private:
     std::map<double, double> xyMap;
 };

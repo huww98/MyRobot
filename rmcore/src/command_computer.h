@@ -87,8 +87,8 @@ class CommandComputer
     double max_centripetal_a;
     double max_v;
 
-    Eigen::Vector2d weight_p;
-    Eigen::Vector2d weight_i;
+    Eigen::Array2d weight_p;
+    Eigen::Array2d weight_i;
 
     double i_enable_k_threshold;
     double distance_when_start_turn;
@@ -101,7 +101,7 @@ class CommandComputer
     std::vector<int> turnList; // -1 for left, 1 for right, 0 for go straght, 2 for finish
     std::vector<int>::iterator nextTurn;
 
-    Eigen::Vector2d i;
+    Eigen::Array2d i;
     std::chrono::steady_clock::time_point lastTime;
 
     std::unique_ptr<FollowLine> followLine;

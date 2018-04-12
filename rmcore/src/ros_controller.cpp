@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include "ros_controller.h"
 
 using namespace std;
@@ -50,6 +51,7 @@ RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &mot
 
 double RosController::calcMaintainSpeedVoltage(double velocity, double &k)
 {
+    velocity = max(min(velocity, velocityVoltageInterpolation.maxX()), velocityVoltageInterpolation.minX());
     return velocityVoltageInterpolation.Y(velocity, k);
 }
 

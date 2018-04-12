@@ -4,7 +4,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-    this_thread::sleep_for(30s);
+    // this_thread::sleep_for(15s);
     cerr << chrono::steady_clock::time_point::min().time_since_epoch().count() << endl;
 
     ros::init(argc, argv, "kf_test");
@@ -57,7 +57,8 @@ int main(int argc, char **argv)
             else if (j % 10 == 7)
             {
                 auto state = stateManager.GetPredictedState(chrono::steady_clock::now());
-                cout << state.State << endl;
+                cout << state.State.transpose() << endl;
+                cout << state.Covariance << endl << endl;
             }
         }
     }

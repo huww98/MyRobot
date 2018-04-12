@@ -5,6 +5,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
+#include <iostream>
 #include "step.h"
 
 namespace kf
@@ -116,6 +117,8 @@ class KalmanFilter
         for (; invalidStateBegin != newInvalidStateBegin; invalidStateBegin++)
         {
             state = std::ref((*invalidStateBegin)->Run(state));
+            assert(!state.get().State.array().isNaN().any());
+            assert(!state.get().Covariance.array().isNaN().any());
         }
     }
 
@@ -152,8 +155,17 @@ class KalmanFilter
         auto insertedPos = this->pendingSteps.insert(afterPos, std::move(newStep));
         auto &insertedStep = *insertedPos;
 
-        beforeStep->SetDuration(beforeStep->GetTime() - insertedStep->GetTime());
-        auto endTime = afterPos == pendingSteps.end() ? predictEndTime : afterStep->GetTime();
+        beforeStep->SetDuration(insertedStep->GetTime() - beforeStep->GetTime() );
+        TimePointType endTime;
+        if (afterPos == pendingSteps.end())
+        {
+            predictEndTime = max(predictEndTime, insertedStep->GetTime());
+            endTime = predictEndTime;
+        }
+        else
+        {
+            predictEndTime = afterStep->GetTime();
+        }
         insertedStep->SetDuration(endTime - insertedStep->GetTime());
 
         if (invalidStateBegin == pendingSteps.end() || (*invalidStateBegin)->GetTime() > insertedStep->GetTime())

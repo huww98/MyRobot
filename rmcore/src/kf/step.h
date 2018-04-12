@@ -25,7 +25,11 @@ class Step
     TimePointType GetTime() const { return time; }
 
     virtual const StateType &Run(const StateType &initialState) = 0;
-    void SetDuration(DurationType d) { this->duration = d; }
+    void SetDuration(DurationType d)
+    {
+        assert(d.count() >= 0);
+        this->duration = d;
+    }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -42,8 +46,10 @@ class InitialStep : public Step<stateCount, StateT>
     using Base = Step<stateCount, StateT>;
 
   public:
-    InitialStep(const StateT &initState):Base(Base::TimePointType::min())
+    InitialStep(const StateT &initState):Base(typename Base::TimePointType())
     {
+        assert(!initState.State.array().isNaN().any());
+        assert(!initState.Covariance.array().isNaN().any());
         this->finishedState = initState;
     }
 
@@ -71,7 +77,7 @@ class Predictor
     virtual StateType Predict(const StateType &initialState, DurationType duration)
     {
         auto params = this->GetParameters(initialState, duration);
-
+        assert(!params.NextStateVec.array().isNaN().any());
         StateType nextState;
         nextState.State = params.NextStateVec;
         nextState.Covariance = params.F * initialState.Covariance * params.F.transpose() + params.NoiseCov;
@@ -145,7 +151,7 @@ class Updater : public UpdaterBase<stateCount, StateType>
         typename UpdateParameters::NoiseCovType innovationCov = noiseCov + H * predictedState.Covariance * H.transpose();
         Eigen::Matrix<double, stateCount, ObservationVectorLength> gain = predictedState.Covariance * H.transpose() * innovationCov.inverse();
         nextState.State = predictedState.State + gain * innovation;
-        nextState.Covariance = StateType::CovMat::Identity() - gain * H * predictedState.Covariance;
+        nextState.Covariance = (StateType::CovMat::Identity() - gain * H) * predictedState.Covariance;
         return nextState;
     }
 };

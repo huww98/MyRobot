@@ -6,6 +6,7 @@ RobotState buildInitState()
 {
     RobotState state;
     state.State.setZero();
+    state.Covariance.setZero();
     return state;
 }
 

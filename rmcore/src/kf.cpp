@@ -2,6 +2,7 @@
 
 using namespace std;
 using namespace std::chrono;
+using namespace Eigen;
 
 KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
     : Base(initState, PredictorPtr(new Predictor(ControlVoltage{0,0}, controller))), controller(&controller)
@@ -38,13 +39,14 @@ Predictor::Predictor(const ControlVoltage &cmd, const RosDiffrentalController &c
 auto Predictor::GetParameters(const StateType &initialState, DurationType duration) -> PredictParameters
 {
     double t = duration_cast<chrono::duration<double>>(duration).count();
+    ROS_ASSERT(t >= 0.0);
 
     auto predictedA = controller.PredictAcceleration(initialState, cmd);
     PredictParameters params;
-    auto a = predictedA.accel.vec;
-    auto v = initialState.V() + a * t;
+    Vector2d a = predictedA.accel.vec;
+    Vector2d v = initialState.V() + a * t;
     double halfTSquare = 0.5 * t * t;
-    auto x = initialState.X() + v * t + halfTSquare * a;
+    Vector2d x = initialState.X() + v * t + halfTSquare * a;
     params.NextStateVec << v, x;
     params.F.setZero();
     params.F.block<2,2>(0,0) = Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t;
