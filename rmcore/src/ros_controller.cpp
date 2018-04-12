@@ -1,6 +1,7 @@
 #include <vector>
 #include <algorithm>
 #include "ros_controller.h"
+#include "utillities/parameters.h"
 
 using namespace std;
 using namespace Eigen;
@@ -9,17 +10,8 @@ auto logName = "controller";
 
 LinearInterpolation buildVelVolInterpolation(ros::NodeHandle &nh, string name)
 {
-    vector<double> velocityList, voltageList;
-    if (!nh.getParam("velocityList", velocityList))
-    {
-        ROS_FATAL_NAMED(logName, "%s: velocityList parameter must be set.", name.c_str());
-        ROS_BREAK();
-    }
-    if (!nh.getParam("voltageList", voltageList))
-    {
-        ROS_FATAL_NAMED(logName, "%s: voltageList parameter must be set.", name.c_str());
-        ROS_BREAK();
-    }
+    auto velocityList = GetRequiredParameter<vector<double>>("velocityList", nh);
+    auto voltageList = GetRequiredParameter<vector<double>>("voltageList", nh);
     if (velocityList.size() != voltageList.size())
     {
         ROS_FATAL_NAMED(logName, "%s: velocityList and voltageList must be at the same length.", name.c_str());
@@ -37,16 +29,8 @@ LinearInterpolation buildVelVolInterpolation(ros::NodeHandle &nh, string name)
 RosController::RosController(ros::NodeHandle nh, std::string name, RosMotor &motor)
     : motor(&motor), velocityVoltageInterpolation(buildVelVolInterpolation(nh, name)), name(name)
 {
-    if (!nh.getParam("touqueVoltageMutiplier", touqueVoltageMutiplier))
-    {
-        ROS_FATAL_NAMED(logName, "%s: touqueVoltageMutiplier parameter must be set.", name.c_str());
-        ROS_BREAK();
-    }
-    if (!nh.getParam("touqueVariance", touqueVariance))
-    {
-        ROS_FATAL_NAMED(logName, "%s: touqueVariance parameter must be set.", name.c_str());
-        ROS_BREAK();
-    }
+    touqueVoltageMutiplier = GetRequiredParameter<double>("touqueVoltageMutiplier", nh);
+    touqueVariance = GetRequiredParameter<double>("touqueVariance", nh);
 }
 
 double RosController::calcMaintainSpeedVoltage(double velocity, double &k)
@@ -89,22 +73,9 @@ auto diffLogName = "diffController";
 RosDiffrentalController::RosDiffrentalController(ros::NodeHandle nh, RosController &leftController, RosController &rightController)
     : leftController(&leftController), rightController(&rightController)
 {
-    string key;
-    if (!nh.searchParam("baseWidth", key))
-    {
-        ROS_FATAL_NAMED(diffLogName, "baseWidth parameter must be set.");
-        ROS_BREAK();
-    }
-    nh.getParam(key, baseWidth);
-
+    baseWidth = SearchRequiredParameter<double>("baseWidth", nh);
     // 1为所有质量都集中在两个轮子上时的转动惯量
-    if (!nh.searchParam("inertia", key))
-    {
-        ROS_FATAL_NAMED(diffLogName, "inertia parameter must be set.");
-        ROS_BREAK();
-    }
-    double inertia;
-    nh.getParam(key, inertia);
+    auto inertia = SearchRequiredParameter<double>("inertia", nh);
     this->inertiaFactor = inertia * baseWidth / 2;
     this->v2wv << 1, -baseWidth / 2,
                   1, baseWidth / 2;

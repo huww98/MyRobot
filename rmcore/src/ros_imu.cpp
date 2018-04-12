@@ -6,6 +6,7 @@
 #include "imu.h"
 #include "ros_imu.h"
 #include "utillities/constants.h"
+#include "utillities/parameters.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -99,20 +100,8 @@ void RosImu::resetIMU()
     ROS_INFO_NAMED(imuLogName, "IMU reset");
 }
 
-int getInterruptPin(const ros::NodeHandle& nh)
-{
-    int pin;
-    if(nh.getParam("interruptPin", pin))
-        return pin;
-
-    ROS_FATAL_NAMED(imuLogName, "interruptPin parameter must be set.");
-    ROS_BREAK();
-
-    return pin;
-}
-
 RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle nh) :
-    Imu(getInterruptPin(nh)), dataReady(dataReady)
+    Imu(GetRequiredParameter<int>("interruptPin", nh)), dataReady(dataReady)
 {
     ROS_DEBUG_NAMED(imuLogName, "Eigen %d.%d.%d", EIGEN_WORLD_VERSION, EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
     getParams(nh);
@@ -122,11 +111,7 @@ RosImu::RosImu(std::function<void(const imu::Data &)> dataReady, ros::NodeHandle
     int dlpfMode;
     nh.param<int>("dlpfMode", dlpfMode, 0x01);
 
-    if (!nh.getParam("variance", variance))
-    {
-        ROS_FATAL_NAMED(imuLogName, "variance parameter must be set.");
-        ROS_BREAK();
-    }
+    variance = GetRequiredParameter<double>("variance", nh);
 
     resetIMU();
     this_thread::sleep_for(100ms);

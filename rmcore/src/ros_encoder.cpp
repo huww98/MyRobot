@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include "ros_encoder.h"
+#include "utillities/parameters.h"
 
 using namespace std;
 using std::chrono::steady_clock;
@@ -57,38 +58,15 @@ void RosEncoder::timeouted()
     tick(data);
 }
 
-int getPin(const ros::NodeHandle &nh, string name)
-{
-    int pin;
-    if (nh.getParam("pin", pin))
-        return pin;
-
-    ROS_FATAL_NAMED(logName, "%s: pin parameter must be set.", name.c_str());
-    ROS_BREAK();
-
-    return pin;
-}
-
 RosEncoder::RosEncoder(TickCallbackType tick, ros::NodeHandle nh, string name)
-    : name(name), pin(getPin(nh, name), Direction::IN), tick(tick)
+    : name(name), pin(GetRequiredParameter<int>("pin", nh), Direction::IN), tick(tick)
 {
-    double tickPerMeter;
-    string key;
-    if (!ros::param::search("encoder/tickPerMeter", key))
-    {
-        ROS_FATAL_NAMED(logName, "tickPerMeter parameter must be set.");
-        ROS_BREAK();
-    }
-    ros::param::get(key, tickPerMeter);
+    auto tickPerMeter = SearchRequiredParameter<double>("encoder/tickPerMeter", nh);
 
     this->meterPerTickTimesCountPerSecond = (1 / tickPerMeter) * steady_clock::duration(1s).count();
 
-    if (!ros::param::search("encoder/minVelocity", key))
-    {
-        ROS_FATAL_NAMED(logName, "minVelocity parameter must be set.");
-        ROS_BREAK();
-    }
-    ros::param::get(key, minVelocity);
+    minVelocity = SearchRequiredParameter<double>("encoder/minVelocity", nh);
+
     duration<double> maxIntervalSecond(1 / (tickPerMeter * minVelocity));
     this->maxInterval = duration_cast<steady_clock::duration>(maxIntervalSecond);
     int maxIntervalms = duration_cast<chrono::milliseconds>(maxIntervalSecond).count();
@@ -100,11 +78,7 @@ RosEncoder::RosEncoder(TickCallbackType tick, ros::NodeHandle nh, string name)
     else
         collabrateData.push_back(1.0);
 
-    if (!nh.getParam("variance", variance))
-    {
-        ROS_FATAL_NAMED(logName, "variance parameter must be set.");
-        ROS_BREAK();
-    }
+    variance = GetRequiredParameter<double>("variance", nh);
 
     ROS_DEBUG_NAMED(logName, "%s: enabling ISR", name.c_str());
     pin.EnableISR(Edge::BOTH, [this](const DigitalValue &v) { this->pinChanged(v); },

@@ -16,4 +16,29 @@ T GetRequiredParameter(std::string name, ros::NodeHandle &nh)
     return param;
 }
 
+template <typename T>
+T SearchRequiredParameter(std::string name, ros::NodeHandle &nh)
+{
+    std::string key;
+    if (!nh.searchParam(name, key))
+    {
+        ROS_FATAL("%s parameter must be set.", name.c_str());
+        ROS_BREAK();
+    }
+    T param;
+    nh.getParam(key, param);
+
+    return param;
+}
+
+template <typename T>
+void SearchParameter(std::string name, ros::NodeHandle &nh, T &param)
+{
+    std::string key;
+    if (nh.searchParam(name, key))
+    {
+        nh.getParam(key, param);
+    }
+}
+
 #endif

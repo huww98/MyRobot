@@ -11,6 +11,7 @@
 #include "control_scheduler.h"
 #include "remote_controller.h"
 #include "command_computer.h"
+#include "utillities/parameters.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -23,20 +24,12 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "controller");
     ros::NodeHandle nh;
 
-    string key;
     double controlFrequency = 20.0;
-    if(ros::param::search("controlFrequency", key))
-        nh.getParam(key, controlFrequency);
+    SearchParameter("controlFrequency", nh, controlFrequency);
 
     ControlScheduler scheduler(controlFrequency);
 
-    double baseWidth;
-    if (!ros::param::search("baseWidth", key))
-    {
-        ROS_FATAL("baseWidth parameter must be set.");
-        ROS_BREAK();
-    }
-    nh.getParam(key, baseWidth);
+    auto baseWidth = SearchRequiredParameter<double>("baseWidth", nh);
 
     RosMotor leftMotor(ros::NodeHandle("~leftMotor"), "leftMotor");
     RosMotor rightMotor(ros::NodeHandle("~rightMotor"), "rightMotor");

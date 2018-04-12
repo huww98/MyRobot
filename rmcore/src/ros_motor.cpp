@@ -1,4 +1,5 @@
 #include "ros_motor.h"
+#include "utillities/parameters.h"
 
 using namespace std;
 
@@ -29,12 +30,7 @@ void RosMotor::command(double outputVoltage)
 
 RosMotor::RosMotor(ros::NodeHandle nh, string name) : name(name)
 {
-    string devPath;
-    if (!nh.getParam("device", devPath))
-    {
-        ROS_FATAL_NAMED(logName, "%s: device parameter required.", name.c_str());
-        ROS_BREAK();
-    }
+    auto devPath = GetRequiredParameter<string>("device", nh);
     motorDev.open(devPath);
     if (!motorDev)
     {
@@ -42,11 +38,5 @@ RosMotor::RosMotor(ros::NodeHandle nh, string name) : name(name)
         ROS_BREAK();
     }
 
-    string key;
-    if (!nh.searchParam("batteryVoltage", key))
-    {
-        ROS_FATAL_NAMED(logName, "%s: batteryVoltage parameter required.", name.c_str());
-        ROS_BREAK();
-    }
-    nh.getParam(key, batteryVoltage);
+    batteryVoltage = SearchRequiredParameter<double>("batteryVoltage", nh);
 }
