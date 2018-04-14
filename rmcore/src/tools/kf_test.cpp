@@ -56,7 +56,7 @@ int main(int argc, char **argv)
             }
             else if (j % 10 == 7)
             {
-                auto state = stateManager.GetPredictedState(chrono::steady_clock::now());
+                auto state = stateManager.GetPredictedState([]{return chrono::steady_clock::now();});
                 cout << state.State.transpose() << endl;
                 cout << state.Covariance << endl << endl;
             }

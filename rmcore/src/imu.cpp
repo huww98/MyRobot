@@ -46,7 +46,9 @@ Imu::~Imu()
 
 void Imu::enable()
 {
-    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x01); //Using Clock Source: PLL with X axis gyroscope reference
+    i2c_smbus_write_byte_data(i2c_fd, REG_PWR_MGMT_1, 0x03); //Using Clock Source: PLL with Z axis gyroscope reference
+    this_thread::sleep_for(100ms);
+    i2c_smbus_write_byte_data(i2c_fd, REG_GYRO_CONFIG, 0x01 << 3); //Gyro Scale
 }
 
 void Imu::reset()

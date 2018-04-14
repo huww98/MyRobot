@@ -33,8 +33,8 @@ class FollowLine : public Navigator
     void visual_info_cb(rmcore::visual_infoConstPtr msg);
 
     double initialized = false;
-    double k;
-    double x_offset;
+    double k = 0.0;
+    double x_offset = 0.0;
 };
 
 class GoStraght : public Navigator
@@ -98,7 +98,7 @@ class CommandComputer
     void turn_cb(rmcore::turnConstPtr msg);
     ros::Subscriber turn_sub;
 
-    std::vector<int> turnList; // -1 for left, 1 for right, 0 for go straght, 2 for finish
+    std::vector<int> turnList; // -1 for right, 1 for left, 0 for go straght, 2 for finish
     std::vector<int>::iterator nextTurn;
 
     Eigen::Array2d i;

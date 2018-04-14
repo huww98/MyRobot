@@ -18,15 +18,16 @@ void RosEncoder::pinChanged(const DigitalValue &currentValue)
         auto interval = now - lastTickTime;
         lastTickTime = now;
         encoder::Data data;
-        data.time = now - interval / 2;
         if (interval > maxInterval*2)
         {
+            data.time = now - maxInterval / 2; // This ensure tick goes after timeout tick.
             data.velocity = this->minVelocity / 2;
             ROS_DEBUG_STREAM_NAMED(logName, name << ": " << data.time.time_since_epoch().count() <<
                 " lnterval too large, velocity: " << data.velocity << ", tick: " << tickCount);
         }
         else
         {
+            data.time = now - interval / 2;
             double rawV = meterPerTickTimesCountPerSecond / interval.count();
             data.velocity = rawV * collabrateData[tickCount % collabrateData.size()];
             ROS_DEBUG_STREAM_NAMED(logName, name << ": " << data.time.time_since_epoch().count() <<

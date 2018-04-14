@@ -31,6 +31,5 @@ bool ControlScheduler::SleepToScheduledTime()
     }
 
     this_thread::sleep_until(scheduledTime);
-    UpdateScheduledTime();
     return true;
 }

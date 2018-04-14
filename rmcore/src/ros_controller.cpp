@@ -52,8 +52,7 @@ double RosController::IssueCommand(double currentVelocity, double expectedTouque
 
     double touqueVoltage = expectedTouque * touqueVoltageMutiplier;
     double v = maintainSpeedVoltage + touqueVoltage;
-    motor->command(v);
-    return v;
+    return motor->command(v);
 }
 
 auto RosController::PredictTouque(double currentVelocity, double voltage) -> PredictedTouque

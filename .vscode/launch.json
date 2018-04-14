@@ -8,7 +8,7 @@
             "name": "(gdb) Pipe Attach",
             "type": "cppdbg",
             "request": "attach",
-            "program": "/home/huww/catkin_ws/devel/lib/rmcore/kf_test",
+            "program": "/home/huww/catkin_ws/devel/lib/rmcore/driver_node",
             "processId": "${command:pickRemoteProcess}",
             "pipeTransport": {
                 "debuggerPath": "/usr/bin/gdb",

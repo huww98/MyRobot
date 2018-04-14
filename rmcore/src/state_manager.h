@@ -1,6 +1,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <functional>
 #include "kf.h"
 #include "spsc_bounded_queue.h"
 
@@ -30,6 +31,6 @@ class StateManager
     void UpdateRightEncoder(const encoder::Data &data);
     void UpdateImu(const imu::Data &data);
     void UpdateControl(const ControlParameters &params);
-    const RobotState &GetPredictedState(KalmanFilter::TimePointType time);
+    const RobotState &GetPredictedState(std::function<KalmanFilter::TimePointType()> timeFunc);
     ~StateManager();
 };
