@@ -65,7 +65,7 @@ bool Turn::Navigate(const RobotState &state, NavigateParameters &params, steady_
     if(!finished)
     {
         double t = duration_cast<chrono::duration<double>>(time-startTime).count();
-        turnedAngle = startAngle + t * turnSpeed;
+        turnedAngle = t * turnSpeed;
         finished = turnedAngle > PI / 2;
     }
 
@@ -138,7 +138,8 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
             break;
         case NavigateState::Turning:
             turn.reset(nullptr);
-            transferStateTo(NavigateState::FollowingLine);
+            // transferStateTo(NavigateState::FollowingLine);
+            transferStateTo(NavigateState::Finished);
             break;
         case NavigateState::GoingStraghtBeforeTurn:
             goStraght.reset(nullptr);
@@ -203,8 +204,12 @@ void CommandComputer::transferStateTo(NavigateState state)
         break;
     case NavigateState::GoingStraght:
         ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraght state");
+        currentNavigator = goStraght.get();
+        break;
     case NavigateState::GoingStraghtBeforeTurn:
         ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraghtBeforeTurn state");
+        currentNavigator = goStraght.get();
+        break;
     case NavigateState::GoingStraghtBeforeFinish:
         ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraghtBeforeFinish state");
         currentNavigator = goStraght.get();

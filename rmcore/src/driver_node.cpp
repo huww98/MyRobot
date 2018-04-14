@@ -24,8 +24,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "controller");
     ros::NodeHandle nh;
 
-    double controlFrequency = 20.0;
-    SearchParameter("controlFrequency", nh, controlFrequency);
+    auto controlFrequency = SearchRequiredParameter<double>("controlFrequency", nh);
 
     ControlScheduler scheduler(controlFrequency);
 

@@ -51,10 +51,10 @@ class Imu
     void enableDataReadyInterrupt(std::function<void()> dataReady);
 
   private:
-    constexpr static const double ACCEL_SCALE = 2.0 / std::numeric_limits<int16_t>::max();
-    constexpr static const double GYRO_SCALE = 500.0 / std::numeric_limits<int16_t>::max();
-    constexpr static const double TEMP_SCALE = 1.0 / 340.0;
-    constexpr static const double TEMP_OFFSET = 36.53;
+    constexpr static double ACCEL_SCALE = 2.0 / std::numeric_limits<int16_t>::max();
+    constexpr static double GYRO_SCALE = 500.0 / std::numeric_limits<int16_t>::max();
+    constexpr static double TEMP_SCALE = 1.0 / 340.0;
+    constexpr static double TEMP_OFFSET = 36.53;
 
     static const uint8_t
         REG_SMPRT_DIV = 0x19,
