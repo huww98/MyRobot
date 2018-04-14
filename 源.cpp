@@ -10,15 +10,15 @@ using namespace cv;
 struct dot {
 	double x;//column
 	double y;//row
-	bool n = false;//false Ê±¼ì²â²»µ½ºÚÏñËØ
+	bool n = false;//false æ—¶æ£€æµ‹ä¸åˆ°é»‘åƒç´ 
 };
 struct k_ {
 	double k = 0;
 	bool p = false;
 };
 
-//double offset_k = 3;//ÍäµÀĞ±ÂÊ²îÅĞ¶Ï±ê×¼
-int mode = 1;//0£º×Ô¶¯¿ØÖÆ×ªÍäÄ£Ê½£»1£ºÖ±ĞĞµ÷ÕûÍ¬Ê±¼ì²âÍäµÀÄ£Ê½£»
+//double offset_k = 3;//å¼¯é“æ–œç‡å·®åˆ¤æ–­æ ‡å‡†
+int mode = 1;//0ï¼šè‡ªåŠ¨æ§åˆ¶è½¬å¼¯æ¨¡å¼ï¼›1ï¼šç›´è¡Œè°ƒæ•´åŒæ—¶æ£€æµ‹å¼¯é“æ¨¡å¼ï¼›
 double k_offset = 0.2;
 double k_turn = 4;
 int k_turn_ = 45;
@@ -35,7 +35,7 @@ void send_offset_k(double k) {
 
 void turn(double x, double y) {
 	cout << "turn: " << x << " , " << y << endl;
-	//Í¸ÊÓ±ä»»
+	//é€è§†å˜æ¢
 	int pixel_x_bef = 960 - x;
 	int pixel_y = pixel_x_bef * y_trans;
 	int pixel_x = pixel_x_bef * x_trans + (y - 640);
@@ -78,7 +78,7 @@ void main()
 		cout << e.what() << endl;
 	}
 
-	// »ñÈ¡ÊÓÆµÎÄ¼ş
+	// è·å–è§†é¢‘æ–‡ä»¶
 	VideoCapture capture("all.avi");
 	//int frameH = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
 	//int frameW = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
@@ -91,10 +91,10 @@ void main()
 	Mat img;
 	while (1) {
 
-		dot dots[dot_];//¼ì²âµã
-		k_ ks[dot_ - 1];//Ğ±ÂÊ
-		bool if_null = true;//´ËÖ¡Í¼Æ¬ÊÇ·ñÎª¿Õ
-		bool if_offset = false;//´ËÖ¡Ğ¡³µÊÇ·ñĞèÒªÆ«×ª
+		dot dots[dot_];//æ£€æµ‹ç‚¹
+		k_ ks[dot_ - 1];//æ–œç‡
+		bool if_null = true;//æ­¤å¸§å›¾ç‰‡æ˜¯å¦ä¸ºç©º
+		bool if_offset = false;//æ­¤å¸§å°è½¦æ˜¯å¦éœ€è¦åè½¬
 							   //img = cvQueryFrame(capture);
 		capture >> img;
 		if (img.empty())
@@ -122,7 +122,7 @@ void main()
 		cout << Imglabelnum << endl << image.rows << "," << image.cols << " " << Imglabels.rows << "," << Imglabels.cols << endl;
 
 		int max_conn_label = 1;
-		for (int i = 2; i < Imglabelnum; i++) {//Çó×î´óÁ¬Í¨¿éµÄlabel
+		for (int i = 2; i < Imglabelnum; i++) {//æ±‚æœ€å¤§è¿é€šå—çš„label
 			long* max_conn = Imgstats.ptr<long>(max_conn_label);
 			long* max_conn_i = Imgstats.ptr<long>(i);
 			//cout <<max_conn_i[4]<< endl;
@@ -130,9 +130,9 @@ void main()
 				max_conn_label = i;
 			}
 		}
-		double k_bef = 0;//Ç°ÃæµãµÄÆ½¾ùĞ±ÂÊ
-		int offset_dot = 10;//Æ«ÒÆµãµÄÏÂ±ê
-		int rows_now = Imglabels.rows * 2 / 5;//Ä¿Ç°ĞĞÊı,ALL=1440,1920
+		double k_bef = 0;//å‰é¢ç‚¹çš„å¹³å‡æ–œç‡
+		int offset_dot = 10;//åç§»ç‚¹çš„ä¸‹æ ‡
+		int rows_now = Imglabels.rows * 2 / 5;//ç›®å‰è¡Œæ•°,ALL=1440,1920
 		for (int i = 0; i < dot_; i++) {//
 
 			int rows_c = 0;
@@ -189,7 +189,7 @@ void main()
 
 			//}
 
-			if (num == 0)//Ã»ÓĞÊôÓÚ×î´óÁ¬Í¨¿éµÄÏñËØ
+			if (num == 0)//æ²¡æœ‰å±äºæœ€å¤§è¿é€šå—çš„åƒç´ 
 				dots[i].n = false;
 			else {
 				if_null = false;
@@ -199,7 +199,7 @@ void main()
 				cout << dots[i].x << " , " << dots[i].y << endl;
 				uchar* data2 = image.ptr<uchar>(dots[i].x);
 				for (int ii = 0; ii < 10; ii++) {
-					data2[int(dots[i].y + ii)] = 150;//»­³öÖĞĞÄµã
+					data2[int(dots[i].y + ii)] = 150;//ç”»å‡ºä¸­å¿ƒç‚¹
 				}
 				//}
 
@@ -208,12 +208,12 @@ void main()
 		}
 
 		//if (if_null){
-		//	break;//Èô´ËÖ¡Îª¿ÕÔòÍ£Ö¹
+		//	break;//è‹¥æ­¤å¸§ä¸ºç©ºåˆ™åœæ­¢
 		//}
 
-		for (int i = dot_ - 1; i >= 1; i--) {//Ëã15¸öĞ±ÂÊ
+		for (int i = dot_ - 1; i >= 1; i--) {//ç®—15ä¸ªæ–œç‡
 			if (dots[i].n == true && dots[i - 1].n == true) {
-				double get_k = (dots[i].y - dots[i - 1].y) / (dots[i].x - dots[i - 1].x);//Ğ±ÂÊ
+				double get_k = (dots[i].y - dots[i - 1].y) / (dots[i].x - dots[i - 1].x);//æ–œç‡
 				ks[i - 1].k = get_k;
 				ks[i - 1].p = true;
 				cout << get_k << endl;
@@ -226,7 +226,7 @@ void main()
 			}
 		}
 
-		//if (ks[0].p == true && ks[0].k > offset_k){//¶¨Î»ÍäµÀÎ»ÖÃ
+		//if (ks[0].p == true && ks[0].k > offset_k){//å®šä½å¼¯é“ä½ç½®
 
 		//}
 
@@ -234,13 +234,13 @@ void main()
 		if (mode == 1) {
 			int count_offset = 0;
 			double all_k = 0;
-			for (int i = dot_ - 2; i>dot_ - 8; i--) {//¼ì²âÆ«ÒÆÁ¿
+			for (int i = dot_ - 2; i>dot_ - 8; i--) {//æ£€æµ‹åç§»é‡
 				if (ks[i].p == true && fabs(ks[i].k) > k_offset) {
 					if_offset = true;
 				}
 			}
 			if (if_offset == true) {
-				for (int i = dot_ - 2; i>dot_ - 8; i--) {//¼ÆËãÆ«ÒÆÁ¿
+				for (int i = dot_ - 2; i>dot_ - 8; i--) {//è®¡ç®—åç§»é‡
 
 					if (ks[i].p == true) {
 						all_k += ks[i].k;
@@ -257,14 +257,14 @@ void main()
 				for (int i = dot_ - 2; i >= 0; i--) {
 					if (pre_k == 0) {
 						if (ks[i].p == true && fabs(ks[i].k - pre_k) > k_turn)
-							turn(dots[i].x, dots[i].y);//¶¨Î»ÍäµÀ
+							turn(dots[i].x, dots[i].y);//å®šä½å¼¯é“
 						else if (ks[i].p == false)
 							break;
 					}
 					else {
 						if (ks[i].p == true && ((fabs(ks[i].k) / fabs(pre_k) > k_turn_) || (ks[i].k*pre_k<0 && fabs(ks[i].k - pre_k)>2 * k_branch))) {
 							cout << i << endl;
-							turn(dots[i].x, dots[i].y);//¶¨Î»ÍäµÀ
+							turn(dots[i].x, dots[i].y);//å®šä½å¼¯é“
 						}
 						else if (ks[i].p == false)
 							break;
