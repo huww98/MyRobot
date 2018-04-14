@@ -22,7 +22,7 @@ bool FollowLine::Navigate(const RobotState &state, NavigateParameters &params, s
     return true;
 }
 
-void FollowLine::visual_info_cb(rmcore::visual_infoConstPtr msg)
+void FollowLine::visual_info_cb(rmvisual::visual_infoConstPtr msg)
 {
     initialized = true;
     x_offset = msg->x_offset;
@@ -138,8 +138,7 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
             break;
         case NavigateState::Turning:
             turn.reset(nullptr);
-            // transferStateTo(NavigateState::FollowingLine);
-            transferStateTo(NavigateState::Finished);
+            transferStateTo(NavigateState::FollowingLine);
             break;
         case NavigateState::GoingStraghtBeforeTurn:
             goStraght.reset(nullptr);
@@ -159,7 +158,7 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
     return a;
 }
 
-void CommandComputer::turn_cb(rmcore::turnConstPtr msg)
+void CommandComputer::turn_cb(rmvisual::turnConstPtr msg)
 {
     if (navigateState != NavigateState::FollowingLine)
     {

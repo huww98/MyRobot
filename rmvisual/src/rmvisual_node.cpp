@@ -2,6 +2,13 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <stdio.h>
+
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <cv_bridge/cv_bridge.h>
+#include <rmvisual/turn.h>
+#include <rmvisual/visual_info.h>
+
 const int dot_ = 16;
 
 using namespace std;
@@ -29,6 +36,9 @@ double x_trans = 0.02;
 double y_trans;
 double scale;
 int count_turn = 0;
+
+ros::Publisher turnPub;
+ros::Publisher visualInfoPub;
 
 void send_offset_k(double k)
 {
@@ -253,17 +263,19 @@ void view(Mat img)
     waitKey(0);
     //system("pause");
 }
-void main()
-{
-    // 获取视频文件
-    VideoCapture capture("all3.avi");
 
-    Mat img;
-    while (1)
-    {
-        capture >> img;
-        if (img.empty())
-            break;
-        view(img);
-    }
+void img_cb(const sensor_msgs::ImageConstPtr& msg)
+{
+    auto cv_ptr = cv_bridge::toCvCopy(msg);
+    view(cv_ptr->image);
+}
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "rmvisual");
+    ros::NodeHandle nh;
+
+    auto image_sub = nh.subscribe("/camera/image", 1, &img_cb);
+    turnPub = nh.advertise<rmvisual::turn>("turn", 2);
+    visualInfoPub = nh.advertise<rmvisual::visual_info>("visual_info", 2);
 }

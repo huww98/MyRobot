@@ -6,8 +6,8 @@
 #include <chrono>
 #include <memory>
 #include "common_types.h"
-#include "rmcore/turn.h"
-#include "rmcore/visual_info.h"
+#include "rmvisual/turn.h"
+#include "rmvisual/visual_info.h"
 
 struct NavigateParameters
 {
@@ -30,7 +30,7 @@ class FollowLine : public Navigator
 
   private:
     ros::Subscriber visual_info_sub;
-    void visual_info_cb(rmcore::visual_infoConstPtr msg);
+    void visual_info_cb(rmvisual::visual_infoConstPtr msg);
 
     double initialized = false;
     double k = 0.0;
@@ -95,7 +95,7 @@ class CommandComputer
     double distance_after_go_straight;
     double distance_after_finish;
 
-    void turn_cb(rmcore::turnConstPtr msg);
+    void turn_cb(rmvisual::turnConstPtr msg);
     ros::Subscriber turn_sub;
 
     std::vector<int> turnList; // -1 for right, 1 for left, 0 for go straght, 2 for finish
