@@ -80,14 +80,6 @@ void main()
 
 	// 获取视频文件
 	VideoCapture capture("all.avi");
-	//int frameH = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
-	//int frameW = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
-	//int fps = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FPS);
-	//int numFrames = (int)cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_COUNT);
-
-	//IplImage* img = 0;
-	//int i = 0;
-	//cout << numFrames << endl;
 	Mat img;
 	while (1) {
 
@@ -95,25 +87,16 @@ void main()
 		k_ ks[dot_ - 1];//斜率
 		bool if_null = true;//此帧图片是否为空
 		bool if_offset = false;//此帧小车是否需要偏转
-							   //img = cvQueryFrame(capture);
+
 		capture >> img;
 		if (img.empty())
 			break;
-		/*for (int i = 0; i < dot_; i++){
-		dots[i].n = false;
-		}
-		for (int i = 0; i < dot_-1; i++){
-		ks[i].p = false;
-		}*/
 
-		//IplImage* img_gray = cvCreateImage(cvGetSize(img), img->depth, 1);
 		Mat img_gray;
 		cvtColor(img, img_gray, CV_BGR2GRAY);
-		//imwrite("img_gray.jpg", img_gray);
 
 		Mat img_binary;
 		threshold(img_gray, img_binary, 150, 255, CV_THRESH_BINARY);
-		//imwrite("img_binary.jpg", img_binary);
 
 		Mat &image = img_binary;
 		bitwise_not(image, image);
@@ -138,24 +121,6 @@ void main()
 			int rows_c = 0;
 			int cols_c = 0;
 			int num = 0;
-			//cv::Vec3b * data_ = image_color.ptr<cv::Vec3b>(rows_now);
-			//if (i == 0){
-			//	for (int i = 0; i < 96; i++){
-			//		uchar* data = image.ptr(rows_now);
-			//		for (int k = 0; k < 3840; k++){//each row
-			//			//cout << int(image.at<uchar>(rows_now,k)) << " ";
-			//			if (int(data[k]) < 10){
-			//				num++;
-			//				cols_c += k;
-			//				rows_c += rows_now;
-			//				//cout << k << " , " << rows_now << endl;
-			//			}
-			//		}
-			//		//cout << endl;
-			//		rows_now++;
-			//	}
-			//}
-			//else
 
 			for (int j = 0; j < Imglabels.rows / 2 / dot_; j++) {
 				int* label_row = Imglabels.ptr<int>(rows_now);
@@ -171,23 +136,6 @@ void main()
 				rows_now++;
 
 			}
-
-			//for (int j = 0; j < 32; j++){
-			//	uchar* label_row = Imglabels.ptr(rows_now);
-			//	uchar* data = image.ptr(rows_now);
-			//	for (int k = 0; k < 1280; k++){//each row
-			//		if (int(data[k]) < 10){
-			//			num++;
-			//			cols_c += k;
-			//			rows_c += rows_now;
-			//			cout << int(label_row[k]) << ",";
-			//			//cout << k << " , " << rows_now << endl;
-			//		}
-			//	}
-			//	//cout << endl;
-			//	rows_now++;
-
-			//}
 
 			if (num == 0)//没有属于最大连通块的像素
 				dots[i].n = false;
@@ -207,29 +155,14 @@ void main()
 
 		}
 
-		//if (if_null){
-		//	break;//若此帧为空则停止
-		//}
-
 		for (int i = dot_ - 1; i >= 1; i--) {//算15个斜率
 			if (dots[i].n == true && dots[i - 1].n == true) {
 				double get_k = (dots[i].y - dots[i - 1].y) / (dots[i].x - dots[i - 1].x);//斜率
 				ks[i - 1].k = get_k;
 				ks[i - 1].p = true;
 				cout << get_k << endl;
-				/*if (fabs(get_k - k_bef) >= offset_k){
-				offset_dot = i - 1;
-				cout << offset_dot + 1 << " is a offset dot" << endl;
-				}
-				else
-				k_bef = (k_bef + get_k) / 2;*/
 			}
 		}
-
-		//if (ks[0].p == true && ks[0].k > offset_k){//定位弯道位置
-
-		//}
-
 
 		if (mode == 1) {
 			int count_offset = 0;
@@ -279,10 +212,8 @@ void main()
 
 		}
 
-
 		imshow("", image);
 		waitKey(0);
 		//system("pause");
 	}
 }
-
