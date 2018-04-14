@@ -35,9 +35,9 @@ class KalmanFilter
 
     static int constexpr StateCount = stateCount;
 
-    KalmanFilter(const StateType &initState, PredictorPtr &&predictor)
+    KalmanFilter(const StateType &initState, TimePointType initTime, PredictorPtr &&predictor)
     {
-        pendingSteps.push_back(StepPtr(new InitialStep<stateCount, StateType>(initState)));
+        pendingSteps.push_back(StepPtr(new InitialStep<stateCount, StateType>(initState, initTime)));
         lastUpdatePos.fill(pendingSteps.begin());
         invalidStateBegin = pendingSteps.end();
         Predict((*pendingSteps.rbegin())->GetTime() + typename TimePointType::duration(1), std::move(predictor));
@@ -164,7 +164,7 @@ class KalmanFilter
         }
         else
         {
-            predictEndTime = afterStep->GetTime();
+            endTime = afterStep->GetTime();
         }
         insertedStep->SetDuration(endTime - insertedStep->GetTime());
 

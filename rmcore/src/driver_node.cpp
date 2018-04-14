@@ -19,7 +19,7 @@ using namespace std::chrono_literals;
 
 int main(int argc, char **argv)
 {
-    this_thread::sleep_for(30s);
+    // this_thread::sleep_for(30s);
 
     ros::init(argc, argv, "controller");
     ros::NodeHandle nh;
@@ -58,21 +58,26 @@ int main(int argc, char **argv)
     ROS_INFO("Encoder Initialized.");
 
     CommandComputer cmdComputer(ros::NodeHandle("~commandComputer"));
-
+    auto timeFunc = [&scheduler]{
+        scheduler.UpdateScheduledTime();
+        return scheduler.GetScheduledTime();
+    };
     while (ros::ok() && !cmdComputer.IsFinished())
     {
+        auto nextState = stateManager.GetPredictedState(timeFunc);
         auto time = scheduler.GetScheduledTime();
-        auto nextState = stateManager.GetPredictedState(time);
-        auto cmd = cmdComputer.ComputeCommand(nextState, time);
-        scheduler.SleepToScheduledTime();
 
         ControlVoltage v;
         if(remoteController.Running())
         {
+            auto cmd = cmdComputer.ComputeCommand(nextState, time);
+            scheduler.SleepToScheduledTime();
             v = controller.IssueCommand(nextState, cmd);
+            ROS_DEBUG("acceleration command issued: linear: %f, angular: %f", cmd.linear(), cmd.angular());
         }
         else
         {
+            scheduler.SleepToScheduledTime();
             leftMotor.command(0.0);
             rightMotor.command(0.0);
             v.leftVoltage = 0.0;
@@ -83,11 +88,15 @@ int main(int argc, char **argv)
         params.time = steady_clock::now();
         stateManager.UpdateControl(params);
 
-        ROS_DEBUG_STREAM("control cycle end. state: " << nextState.State <<
+        ROS_INFO_STREAM("control cycle end. state: " << nextState.State.transpose() <<
             " predicted time: " << time.time_since_epoch().count() <<
-            " real time: " << params.time.time_since_epoch().count() << " command: " << cmd.vec <<
+            " real time: " << (params.time-time).count() <<
             " voltage: " << v.leftVoltage << ", " << v.rightVoltage);
+
+        ros::spinOnce();
     }
 
     imu.close();
+    leftMotor.command(0.0);
+    rightMotor.command(0.0);
 }

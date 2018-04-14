@@ -33,8 +33,8 @@ class FollowLine : public Navigator
     void visual_info_cb(rmcore::visual_infoConstPtr msg);
 
     double initialized = false;
-    double k;
-    double x_offset;
+    double k = 0.0;
+    double x_offset = 0.0;
 };
 
 class GoStraght : public Navigator

@@ -52,7 +52,7 @@ class Imu
 
   private:
     constexpr static const double ACCEL_SCALE = 2.0 / std::numeric_limits<int16_t>::max();
-    constexpr static const double GYRO_SCALE = 250.0 / std::numeric_limits<int16_t>::max();
+    constexpr static const double GYRO_SCALE = 500.0 / std::numeric_limits<int16_t>::max();
     constexpr static const double TEMP_SCALE = 1.0 / 340.0;
     constexpr static const double TEMP_OFFSET = 36.53;
 
@@ -66,7 +66,8 @@ class Imu
         REG_GYRO_XOUT_H = 0x43,
         REG_GYRO_YOUT_H = 0x45,
         REG_GYRO_ZOUT_H = 0x47,
-        REG_PWR_MGMT_1 = 0x6B;
+        REG_PWR_MGMT_1 = 0x6B,
+        REG_GYRO_CONFIG = 0x1B;
 
     int i2c_fd;
     DigitalGpio intPin;

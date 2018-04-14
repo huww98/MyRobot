@@ -20,7 +20,7 @@ template <typename T>
 T SearchRequiredParameter(std::string name, ros::NodeHandle &nh)
 {
     std::string key;
-    if (!nh.searchParam(name, key))
+    if (!ros::param::search(name, key))
     {
         ROS_FATAL("%s parameter must be set.", name.c_str());
         ROS_BREAK();

@@ -1,9 +1,12 @@
+#include <iostream>
 #include "command_computer.h"
 #include "utillities/parameters.h"
 #include "utillities/constants.h"
 
 using namespace std;
 using namespace std::chrono;
+
+auto commandComputerLogName = "commandComputer";
 
 FollowLine::FollowLine(ros::NodeHandle &nh)
 {
@@ -73,7 +76,7 @@ bool Turn::Navigate(const RobotState &state, NavigateParameters &params, steady_
     params.k = tan(startAngle + direction * turnedAngle - state.Angle());
     params.x_offset = 0;
     params.max_v = max_v;
-    return finished && abs(params.k) < exit_k_thre;
+    return !finished || abs(params.k) > exit_k_thre;
 }
 
 CommandComputer::CommandComputer(ros::NodeHandle nh): nh(nh)
@@ -97,6 +100,8 @@ CommandComputer::CommandComputer(ros::NodeHandle nh): nh(nh)
 
     followLine.reset(new FollowLine(nh));
     currentNavigator = followLine.get();
+
+    i.setZero();
 }
 
 AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, steady_clock::time_point time)
@@ -107,16 +112,17 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
     lastTime = time;
 
     NavigateParameters params;
-    bool navigateFinished = currentNavigator->Navigate(state, params, time);
+    bool navigateFinished = !currentNavigator->Navigate(state, params, time);
 
     Eigen::Array2d setpoint;
-    setpoint(1) = -params.k * weight_k - params.x_offset * weight_xOffset;
-    setpoint(0) = min({max_centripetal_a / setpoint(1), max_v, params.max_v});
+    setpoint(1) = params.k * weight_k - params.x_offset * weight_xOffset;
+    setpoint(0) = min({max_centripetal_a / abs(setpoint(1)), max_v, params.max_v});
 
     Eigen::Array2d error = setpoint - state.V().array();
-    if(abs(params.k) < i_enable_k_threshold)
+    if(t < 0.5 && abs(params.k) < i_enable_k_threshold)
     {
         i += error * t;
+        ROS_ASSERT((i.abs() < 100).all());
     }
 
     AccelerationCommand a;
@@ -143,6 +149,7 @@ AccelerationCommand CommandComputer::ComputeCommand(const RobotState &state, ste
         case NavigateState::GoingStraghtBeforeFinish:
             goStraght.reset(nullptr);
             transferStateTo(NavigateState::Finished);
+            break;
         default:
             ROS_BREAK();
         }
@@ -178,7 +185,7 @@ void CommandComputer::turn_cb(rmcore::turnConstPtr msg)
         break;
     case 2:
         goStraght.reset(new GoStraght(msg->k, msg->distance + distance_after_finish));
-        transferStateTo(NavigateState::GoingStraght);
+        transferStateTo(NavigateState::GoingStraghtBeforeFinish);
         nextTurn++;
         break;
     default:
@@ -191,17 +198,23 @@ void CommandComputer::transferStateTo(NavigateState state)
     switch (state)
     {
     case NavigateState::FollowingLine:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to FollowingLine state");
         currentNavigator = followLine.get();
         break;
     case NavigateState::GoingStraght:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraght state");
     case NavigateState::GoingStraghtBeforeTurn:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraghtBeforeTurn state");
     case NavigateState::GoingStraghtBeforeFinish:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to GoingStraghtBeforeFinish state");
         currentNavigator = goStraght.get();
         break;
     case NavigateState::Turning:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to Turning state");
         currentNavigator = turn.get();
         break;
     case NavigateState::Finished:
+        ROS_INFO_NAMED(commandComputerLogName, "transfer to Finished state");
         break;
     default:
         ROS_BREAK();

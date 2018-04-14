@@ -9,9 +9,9 @@ class ControlScheduler
     ControlScheduler(double frequency);
     TimePointType GetScheduledTime() const { return scheduledTime; }
     bool SleepToScheduledTime();
+    void UpdateScheduledTime();
 
   private:
-    void UpdateScheduledTime();
 
     const DurationType expectedInterval;
     TimePointType lastControlTime;

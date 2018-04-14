@@ -82,10 +82,10 @@ void StateManager::UpdateControl(const ControlParameters &params)
     kf.Predict(params);
 }
 
-const RobotState &StateManager::GetPredictedState(KalmanFilter::TimePointType time)
+const RobotState &StateManager::GetPredictedState(std::function<KalmanFilter::TimePointType()> timeFunc)
 {
     lock_guard<mutex> lk(insertMutex);
-    kf.SetPredictEndTime(time);
+    kf.SetPredictEndTime(timeFunc());
     return kf.GetLatestState();
 }
 

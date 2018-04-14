@@ -5,7 +5,7 @@ using namespace std::chrono;
 using namespace Eigen;
 
 KalmanFilter::KalmanFilter(double baseWidth, RosDiffrentalController &controller, const RobotState &initState)
-    : Base(initState, PredictorPtr(new Predictor(ControlVoltage{0,0}, controller))), controller(&controller)
+    : Base(initState, steady_clock::now(), PredictorPtr(new Predictor(ControlVoltage{0,0}, controller))), controller(&controller)
 {
     InitEncoderUpdater(baseWidth);
 }
@@ -46,11 +46,12 @@ auto Predictor::GetParameters(const StateType &initialState, DurationType durati
     Vector2d a = predictedA.accel.vec;
     Vector2d v = initialState.V() + a * t;
     double halfTSquare = 0.5 * t * t;
-    Vector2d x = initialState.X() + v * t + halfTSquare * a;
+    Vector2d x = initialState.X() + initialState.V() * t + halfTSquare * a;
     params.NextStateVec << v, x;
-    params.F.setZero();
     params.F.block<2,2>(0,0) = Eigen::Matrix2d::Identity() + predictedA.jacobianOfVelocity * t;
-    // 我们没有其他状态的估计，所以没有必要计算其他状态的噪音，也就没有必要算jacobian了
+    params.F.block<2,2>(2,2) = Eigen::Matrix2d::Identity();
+    params.F.block<2,2>(2,0) = t * Eigen::Matrix2d::Identity() + halfTSquare * predictedA.jacobianOfVelocity;
+    params.F.block<2,2>(0,2).setZero();
 
     // 噪音计算是一个近似。方差本应该和时间的平方成正比，但在这个实例中，本次控制与之前的控制结果关系较大，
     // 其协方差与时间成正比，且方差和协方差相比应该可以忽略不计。这样计算误差，在时间间隔较小时可使速度的

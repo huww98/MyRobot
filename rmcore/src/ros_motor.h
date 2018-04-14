@@ -9,7 +9,7 @@ class RosMotor
 {
   public:
     RosMotor(ros::NodeHandle nh, std::string name);
-    void command(double outputVoltage);
+    double command(double outputVoltage);
 
   private:
     std::ofstream motorDev;

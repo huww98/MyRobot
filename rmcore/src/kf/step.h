@@ -46,7 +46,7 @@ class InitialStep : public Step<stateCount, StateT>
     using Base = Step<stateCount, StateT>;
 
   public:
-    InitialStep(const StateT &initState):Base(typename Base::TimePointType())
+    InitialStep(const StateT &initState, typename Base::TimePointType initTime):Base(initTime)
     {
         assert(!initState.State.array().isNaN().any());
         assert(!initState.Covariance.array().isNaN().any());
