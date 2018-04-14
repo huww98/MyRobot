@@ -49,7 +49,7 @@ void turn(double x, double y) {
 	}*/
 }
 
-void main()
+int main()
 {
 	std::vector<Point2f> bef_dot(4);
 	std::vector<Point2f> now_dot(4);
@@ -205,8 +205,6 @@ void main()
 					pre_k = ks[i].k;
 				}
 			}
-
-
 		}
 		else if (mode == 0) {
 
