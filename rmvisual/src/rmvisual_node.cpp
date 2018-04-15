@@ -40,14 +40,22 @@ int count_turn = 0;
 ros::Publisher turnPub;
 ros::Publisher visualInfoPub;
 
-void send_offset_k(double k)
+void send_offset_k(double k, double x_offset)
 {
-    cout << "k=" << k << endl;
+    rmvisual::visual_info msg;
+    msg.header.stamp = ros::Time::now();
+    msg.k = -k;
+    msg.x_offset = x_offset;
+    visualInfoPub.publish(msg);
 }
 
-void turn(double x, double y)
+void turn(double x, double y, double k)
 {
-    cout << "turn: " << x << " , " << y << endl;
+    rmvisual::turn msg;
+    msg.header.stamp = ros::Time::now();
+    msg.distance = sqrt(x*x+y*y);
+    msg.k = -k;
+    turnPub.publish(msg);
 }
 
 void view(Mat img)
@@ -158,6 +166,16 @@ void view(Mat img)
         }
     }
 
+    double first_x;
+    for (int i = 0; i < dot_; i++)
+    {
+        if (dots[i].n == true)
+        {
+            first_x = dots[i].y;
+            break;
+        }
+    }
+
     for (int i = dot_ - 1; i >= 1; i--)
     { //算15个斜率
         if (dots[i].n == true && dots[i - 1].n == true)
@@ -169,95 +187,93 @@ void view(Mat img)
         }
     }
 
-    if (mode == 1)
+    int count_offset = 0;
+    double all_k = 0;
+    double sent_k;
+
+    for (int i = dot_ - 2; i > dot_ - 8; i--)
+    { //检测偏移量
+        if (ks[i].p == true)
+        {
+            if_offset = true;
+        }
+    }
+    if (if_offset == true)
     {
-        int count_offset = 0;
-        double all_k = 0;
         for (int i = dot_ - 2; i > dot_ - 8; i--)
-        { //检测偏移量
-            if (ks[i].p == true && fabs(ks[i].k) > k_offset)
-            {
-                if_offset = true;
-            }
-        }
-        if (if_offset == true)
-        {
-            for (int i = dot_ - 2; i > dot_ - 8; i--)
-            { //计算偏移量
+        { //计算偏移量
 
-                if (ks[i].p == true)
-                {
-                    all_k += ks[i].k;
-                    count_offset++;
-                }
+            if (ks[i].p == true)
+            {
+                all_k += ks[i].k;
+                count_offset++;
             }
-            if (if_offset)
-                send_offset_k(all_k / count_offset);
         }
 
-        if (ks[dot_ - 2].p == true)
+        sent_k = all_k / count_offset;
+        send_offset_k(sent_k, first_x);
+    }
+
+    if (ks[dot_ - 2].p == true)
+    {
+        double pre_k = ks[dot_ - 2].k;
+        for (int i = dot_ - 2; i >= 0; i--)
         {
-            double pre_k = ks[dot_ - 2].k;
-            for (int i = dot_ - 2; i >= 0; i--)
+            if (fabs(pre_k) < 0.3)
             {
-                if (fabs(pre_k) < 0.3)
-                {
-                    if (ks[i].p == true && fabs(ks[i].k - pre_k) > k_turn)
-                        turn(dots_trans[i].x, dots_trans[i].y); //定位弯道
-                    else if (ks[i].p == false)
-                        break;
-                }
-                else
-                {
-                    if (ks[i].p == true && ((fabs(ks[i].k) / fabs(pre_k) > k_turn_) || (ks[i].k * pre_k < 0 && fabs(ks[i].k - pre_k) > 2 * k_branch)))
-                    {
-                        cout << i << endl;
-                        turn(dots_trans[i].x, dots_trans[i].y); //定位弯道
-                    }
-                    else if (ks[i].p == false)
-                        break;
-                }
-                pre_k = ks[i].k;
-            }
-        }
-        if (ks[dot_ - 2].p)
-        {
-            bool if_straight = true; //检测出口或标准的丁字路口
-            int i_;
-            for (int i = dot_ - 2; i >= 0; i--)
-            {
-                if (if_straight)
-                {
-                    if (ks[i].p)
-                    {
-                        if (fabs(ks[i].k) < k_offset)
-                        {
-                            if (i == 0)
-                                if_straight = false; //全直
-                            else
-                                continue;
-                        }
-                        else
-                            if_straight = false;
-                    }
-                    else
-                    {
-                        i_ = i + 1;
-                        break;
-                    }
-                }
-                else
+                if (ks[i].p == true && fabs(ks[i].k - pre_k) > k_turn)
+                    turn(dots_trans[i].x, dots_trans[i].y, sent_k); //定位弯道
+                else if (ks[i].p == false)
                     break;
             }
-            if (if_straight)
+            else
             {
-                turn(dots[i_].x, dots[i_].y); //最后那个点
+                if (ks[i].p == true && ((fabs(ks[i].k) / fabs(pre_k) > k_turn_) || (ks[i].k * pre_k < 0 && fabs(ks[i].k - pre_k) > 2 * k_branch)))
+                {
+                    cout << i << endl;
+                    turn(dots_trans[i].x, dots_trans[i].y, sent_k); //定位弯道
+                }
+                else if (ks[i].p == false)
+                    break;
             }
+            pre_k = ks[i].k;
         }
     }
-    else if (mode == 0)
+    if (ks[dot_ - 2].p)
     {
+        bool if_straight = true; //检测出口或标准的丁字路口
+        int i_;
+        for (int i = dot_ - 2; i >= 0; i--)
+        {
+            if (if_straight)
+            {
+                if (ks[i].p)
+                {
+                    if (fabs(ks[i].k) < k_offset)
+                    {
+                        if (i == 0)
+                            if_straight = false; //全直
+                        else
+                            continue;
+                    }
+                    else
+                        if_straight = false;
+                }
+                else
+                {
+                    i_ = i + 1;
+                    break;
+                }
+            }
+            else
+                break;
+        }
+        if (if_straight)
+        {
+            turn(dots[i_].x, dots[i_].y, sent_k); //最后那个点
+        }
     }
+
     namedWindow("", WINDOW_NORMAL);
     imshow("", image);
     waitKey(0);
@@ -275,7 +291,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "rmvisual");
     ros::NodeHandle nh;
 
-    auto image_sub = nh.subscribe("/camera/image", 1, &img_cb);
+    auto image_sub = nh.subscribe("image", 1, &img_cb);
     turnPub = nh.advertise<rmvisual::turn>("turn", 2);
     visualInfoPub = nh.advertise<rmvisual::visual_info>("visual_info", 2);
 }
